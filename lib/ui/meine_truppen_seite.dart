@@ -84,19 +84,21 @@ class MeineTruppenSeite extends StatelessWidget {
   }
 }
 
-Future<void> truppeBearbeiten(BuildContext context, Datenbank db, EigeneTruppe? vorhanden) {
-  return showModalBottomSheet<void>(
+/// Liefert die gespeicherte Truppe (oder null bei Abbruch)
+Future<EigeneTruppe?> truppeBearbeiten(BuildContext context, Datenbank db, EigeneTruppe? vorhanden, {String? farbe}) {
+  return showModalBottomSheet<EigeneTruppe>(
     context: context,
     isScrollControlled: true,
     showDragHandle: true,
-    builder: (_) => _TruppenSheet(db: db, vorhanden: vorhanden),
+    builder: (_) => _TruppenSheet(db: db, vorhanden: vorhanden, farbe: farbe),
   );
 }
 
 class _TruppenSheet extends StatefulWidget {
   final Datenbank db;
   final EigeneTruppe? vorhanden;
-  const _TruppenSheet({required this.db, this.vorhanden});
+  final String? farbe;
+  const _TruppenSheet({required this.db, this.vorhanden, this.farbe});
 
   @override
   State<_TruppenSheet> createState() => _TruppenSheetState();
@@ -110,7 +112,8 @@ class _TruppenSheetState extends State<_TruppenSheet> {
     super.initState();
     final v = widget.vorhanden;
     _t = v == null
-        ? EigeneTruppe(id: DateTime.now().microsecondsSinceEpoch.toString(), farbe: 'rot', typ: 'mana', level: 1)
+        ? EigeneTruppe(
+            id: DateTime.now().microsecondsSinceEpoch.toString(), farbe: widget.farbe ?? 'rot', typ: 'mana', level: 1)
         : EigeneTruppe(
             id: v.id,
             farbe: v.farbe,
@@ -237,7 +240,7 @@ class _TruppenSheetState extends State<_TruppenSheet> {
             FilledButton(
               onPressed: () async {
                 await sammlung.truppeSpeichern(_t);
-                if (context.mounted) Navigator.pop(context);
+                if (context.mounted) Navigator.pop(context, _t);
               },
               child: Text(tx('Speichern', 'Save')),
             ),

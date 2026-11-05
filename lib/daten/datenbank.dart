@@ -153,6 +153,47 @@ class Held {
     this.kostuemStufen = 4,
   }) : _such = '$name $nameEn $titel $titelEn $spezialName $spezialNameEn'.toLowerCase();
 
+  /// Kopie mit zusätzlichen Effekten/Immunitäten (z. B. durch die Truppe)
+  Held mitZusatz({Set<String> effekte = const {}, Map<String, double> immun = const {}}) {
+    final im = {...this.immun};
+    immun.forEach((k, v) => im[k] = (im[k] ?? 0) > v ? im[k]! : v);
+    return Held(
+      id: id,
+      name: name,
+      nameEn: nameEn,
+      titel: titel,
+      sterne: sterne,
+      element: element,
+      klasse: klasse,
+      familie: familie,
+      tempoId: tempoId,
+      tempo: tempo,
+      datum: datum,
+      quelle: quelle,
+      werte: werte,
+      basis: basis,
+      spezialName: spezialName,
+      spezial: spezial,
+      passive: passive,
+      effekte: {...this.effekte, ...effekte},
+      immun: im,
+      kostuemVon: kostuemVon,
+      kostuemTyp: kostuemTyp,
+      kommend: kommend,
+      unvollstaendig: unvollstaendig,
+      aether: aether,
+      titelEn: titelEn,
+      klasseEn: klasseEn,
+      klasseKey: klasseKey,
+      tempoEn: tempoEn,
+      spezialNameEn: spezialNameEn,
+      spezialEn: spezialEn,
+      aetherEn: aetherEn,
+      kostuemTabelle: kostuemTabelle,
+      kostuemStufen: kostuemStufen,
+    );
+  }
+
   // Anzeige in der eingestellten Sprache
   String get nameL => Sprache.en && nameEn.isNotEmpty ? nameEn : name;
   String get titelL => Sprache.en && titelEn.isNotEmpty ? titelEn : titel;

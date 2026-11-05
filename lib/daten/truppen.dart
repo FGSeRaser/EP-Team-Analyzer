@@ -235,6 +235,72 @@ class TruppenWissen {
     return w;
   }
 
+  /// Was eine Truppe dem Helden im Kampf gibt – als Effekte für die Analyse
+  ({Set<String> effekte, Map<String, double> immun, List<String> texte}) truppenEffekte(EigeneTruppe t, Held h) {
+    final fx = <String>{};
+    final im = <String, double>{};
+    final texte = <String>[];
+    final mana = t.manaProzent(this);
+    final krit = t.kritProzent(this);
+    final umgehen = t.umgehenProzent(this);
+    if (mana > 0) texte.add('Mana +$mana %');
+    if (krit > 0) {
+      fx.add('crit_up');
+      texte.add('${tx('Krit', 'Crit')} $krit %');
+    }
+    if (umgehen > 0) {
+      fx.add('bypass');
+      texte.add(tx('$umgehen % Boni umgehen', '$umgehen% bypass buffs'));
+    }
+    if (t.typ == 'leg') {
+      final l = legendaer.where((x) => x.name == t.legName).toList();
+      if (l.isNotEmpty) {
+        final passt = l.first.klasse1 == h.klasseKey || l.first.klasse2 == h.klasseKey;
+        final p = passive[l.first.passiv];
+        if (!passt) {
+          texte.add(tx('Klasse passt nicht – kein Truppen-Passiv', 'Class does not match – no troop passive'));
+        } else {
+          texte.add(p?.label ?? l.first.passiv);
+          switch (l.first.passiv) {
+            case 'crit':
+              fx.add('crit_up');
+            case 'atk_add':
+              fx.add('atk_up');
+            case 'def_add':
+              fx.add('def_up');
+            case 'atk_red':
+              fx.add('atk_down');
+            case 'def_red':
+              fx.add('def_down');
+            case 'ailment_dmg':
+              im['dot'] = 0.5;
+            case 'resist':
+              im['ailments'] = 0.35;
+            case 'special_dmg':
+              fx.add('elem_dmg_up');
+            case 'special_def':
+              fx.add('special_def_up');
+            case 'heal_extra':
+              fx.add('heal_up');
+          }
+        }
+      }
+    }
+    return (effekte: fx, immun: im, texte: texte);
+  }
+
+  /// Team mit eingerechneten Truppen (für die Analyse)
+  List<Held> teamMitTruppen(List<Held> team, Map<String, EigeneTruppe> truppen) => [
+        for (final h in team)
+          if (truppen[h.id] == null)
+            h
+          else
+            () {
+              final e = truppenEffekte(truppen[h.id]!, h);
+              return h.mitZusatz(effekte: e.effekte, immun: e.immun);
+            }(),
+      ];
+
   /// Steine bis zur Spezialfähigkeit mit diesem Mana-Bonus (null, wenn unbekannt)
   int? steine(Held h, int manaProzent) {
     final s = manaSchwellen[h.tempoId];

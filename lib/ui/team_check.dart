@@ -11,6 +11,7 @@ import '../daten/datenbank.dart';
 import '../daten/sprache.dart';
 import 'held_detail.dart';
 import 'helden_liste.dart';
+import 'meine_truppen_seite.dart';
 import 'sammlung_scope.dart';
 import 'widgets.dart';
 
@@ -102,6 +103,11 @@ class _TeamCheckState extends State<TeamCheck> {
               onTap: () => Navigator.pop(ctx, tr),
             ),
           ListTile(
+            leading: const Icon(Icons.add_circle_outline),
+            title: Text(tx('Neue Truppe eintragen …', 'Add a new troop …')),
+            onTap: () => Navigator.pop(ctx, 'neu'),
+          ),
+          ListTile(
             leading: const Icon(Icons.block),
             title: Text(tx('Keine Truppe', 'No troop')),
             onTap: () => Navigator.pop(ctx, 'keine'),
@@ -109,7 +115,12 @@ class _TeamCheckState extends State<TeamCheck> {
         ]),
       ),
     );
-    if (wahl == null) return;
+    if (wahl == null || !mounted) return;
+    if (wahl == 'neu') {
+      final neu = await truppeBearbeiten(context, widget.db, null, farbe: h.element);
+      if (neu != null && neu.farbe == h.element) setState(() => _truppen[i] = neu);
+      return;
+    }
     setState(() => _truppen[i] = wahl is EigeneTruppe ? wahl : null);
   }
 
@@ -129,8 +140,13 @@ class _TeamCheckState extends State<TeamCheck> {
   Widget build(BuildContext context) {
     final t = Theme.of(context);
     final team = _slots.whereType<Held>().toList();
-    final bericht = Analyse(widget.db).team(team);
     final db = widget.db;
+    final truppenMap = <String, EigeneTruppe>{
+      for (var i = 0; i < 5; i++)
+        if (_slots[i] != null && _truppen[i] != null) _slots[i]!.id: _truppen[i]!,
+    };
+    // Truppen-Fähigkeiten (Krit, Umgehen, legendäre Passive) zählen in der Analyse mit
+    final bericht = Analyse(db).team(truppenVon(db).teamMitTruppen(team, truppenMap));
 
     return Scaffold(
       appBar: AppBar(
@@ -238,11 +254,25 @@ class _TeamCheckState extends State<TeamCheck> {
               ),
             )
           else ...[
-            if (_truppen.any((x) => x != null))
-              Abschnitt(tx('Truppen', 'Troops'), icon: Icons.shield, kinder: [
-                for (var i = 0; i < 5; i++)
-                  if (_slots[i] != null && _truppen[i] != null) _truppenZeile(t, _slots[i]!, _truppen[i]!),
-              ]),
+            Abschnitt(tx('Truppen', 'Troops'), icon: Icons.shield, kinder: [
+              Text(
+                tx('Tippe bei jedem Helden auf „Truppe“. Ihre Fähigkeiten (Krit, Boni umgehen, legendäre Passive, Mana) werden unten in der Analyse mitgerechnet.',
+                    'Tap "Troop" for each hero. Its abilities (crit, bypass, legendary passives, mana) are included in the analysis below.'),
+                style: t.textTheme.bodySmall,
+              ),
+              const SizedBox(height: 8),
+              for (var i = 0; i < 5; i++)
+                if (_slots[i] != null) _truppenZeile(t, i, _slots[i]!, _truppen[i]),
+              if (SammlungScope.of(context).truppen.isNotEmpty)
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton.icon(
+                    onPressed: _truppenAutomatisch,
+                    icon: const Icon(Icons.auto_fix_high, size: 18),
+                    label: Text(tx('Automatisch verteilen', 'Assign automatically')),
+                  ),
+                ),
+            ]),
             Abschnitt(tx('Überblick', 'Overview'), icon: Icons.insights, kinder: [
               Text(tx('Kraft gesamt: ${bericht.kraft}', 'Total power: ${bericht.kraft}')),
               const SizedBox(height: 6),
@@ -322,21 +352,32 @@ class _TeamCheckState extends State<TeamCheck> {
     );
   }
 
-  Widget _truppenZeile(ThemeData t, Held h, EigeneTruppe tr) {
+  Widget _truppenZeile(ThemeData t, int platz, Held h, EigeneTruppe? tr) {
     final w = truppenVon(widget.db);
+    final effekte = tr == null ? null : w.truppenEffekte(tr, h);
     final ohne = w.steine(h, 0);
-    final mit = w.steine(h, tr.manaProzent(w));
+    final mit = tr == null ? null : w.steine(h, tr.manaProzent(w));
     return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Text.rich(TextSpan(children: [
-        TextSpan(text: '${h.nameL}: ', style: const TextStyle(fontWeight: FontWeight.bold)),
-        TextSpan(text: '${tr.typName(w)} ${tr.level}'),
-        if (tr.manaProzent(w) > 0) TextSpan(text: ' · Mana +${tr.manaProzent(w)} %'),
-        if (ohne != null && mit != null && mit != ohne)
-          TextSpan(
-              text: tx(' · $ohne → $mit Steine', ' · $ohne → $mit tiles'),
-              style: const TextStyle(color: Colors.green)),
-      ])),
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        HeldBild(h, groesse: 40),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(h.nameL, style: t.textTheme.titleSmall),
+            Text(tr == null ? tx('Keine Truppe', 'No troop') : '${tr.typName(w)} · Level ${tr.level}'),
+            if (effekte != null && effekte.texte.isNotEmpty)
+              Text(effekte.texte.join(' · '), style: t.textTheme.bodySmall?.copyWith(color: t.colorScheme.primary)),
+            if (ohne != null && mit != null && mit != ohne)
+              Text(tx('$ohne → $mit Steine bis zur Spezialfähigkeit', '$ohne → $mit tiles to the special'),
+                  style: t.textTheme.bodySmall?.copyWith(color: Colors.green)),
+          ]),
+        ),
+        OutlinedButton(
+          onPressed: () => _truppeWaehlen(platz),
+          child: Text(tr == null ? tx('Truppe', 'Troop') : tx('Ändern', 'Change')),
+        ),
+      ]),
     );
   }
 }

@@ -205,4 +205,14 @@ void main() {
     expect(EigeneTruppe(id: 'x', farbe: 'rot', typ: 'magie', level: 23).manaProzent(w), 17);
     expect(EigeneTruppe(id: 'y', farbe: 'rot', typ: 'krit', level: 30).kritProzent(w), 13);
   });
+
+  test('Truppen-Fähigkeiten zählen in der Team-Analyse', () {
+    final w = truppenVon(db);
+    final h = db.helden.firstWhere((x) => x.sterne == 5 && x.element == 'rot' && !x.effekte.contains('crit_up'));
+    final krit = EigeneTruppe(id: 'k', farbe: 'rot', typ: 'krit', level: 30);
+    expect(w.truppenEffekte(krit, h).effekte, contains('crit_up'));
+    final mit = w.teamMitTruppen([h], {h.id: krit}).first;
+    expect(mit.effekte, contains('crit_up'));
+    expect(h.effekte.contains('crit_up'), isFalse, reason: 'Original bleibt unverändert');
+  });
 }

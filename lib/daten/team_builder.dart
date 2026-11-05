@@ -409,7 +409,8 @@ class TeamBuilder {
       final l = _logit(t, gegner, gruende: gut, probleme: schlecht);
       ch = (100 / (1 + math.exp(-l))).round().clamp(3, 97);
     } else {
-      final bericht = a.team(t);
+      final zugeteilt = truppenZuteilen(t, m);
+      final bericht = a.team(truppenVon(db).teamMitTruppen(t, zugeteilt));
       for (final e in bericht.bausteine.entries) {
         if (e.value) gut.add(_bausteinName(e.key));
       }
