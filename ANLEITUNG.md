@@ -227,10 +227,19 @@ startet danach automatisch einen neuen APK-Bau.
 
 Von Hand starten: **Actions → „Heldendaten aktualisieren“ → „Run workflow“**.
 
-### Neue App-Version installieren
-1. **Vorher eine Sicherung machen** (siehe Abschnitt 9) – nur zur Vorsicht.
-2. Neue APK wie in [Abschnitt 4](#4-apk-bauen-lassen-und-herunterladen) herunterladen.
-3. Einfach **drüber installieren**. Deine Sammlung bleibt erhalten.
+### Neue App-Version installieren – direkt in der App
+Jeder Build legt auf GitHub automatisch ein **Release** mit der APK an (Reiter „Releases“ im Repo).
+
+- Die App schaut **beim Start** (höchstens einmal am Tag) nach, ob es eine neuere Version gibt,
+  und zeigt dann **„Neue Version verfügbar“** mit den Änderungen.
+- Von Hand: **Info → „Nach Updates suchen“**.
+- **„Jetzt aktualisieren“** lädt die APK herunter (mit Fortschritt) und öffnet die Installation.
+  Dort einmal auf **„Installieren“** tippen – das verlangt Android aus Sicherheitsgründen immer.
+- Beim **allerersten** Update fragt Android, ob die App „Apps installieren“ darf → **erlauben**.
+- Deine Sammlung bleibt erhalten.
+- Abschalten: **Info → „Beim Start automatisch prüfen“**.
+
+Ohne App geht es weiterhin über **Actions → Artifacts** oder direkt unter **Releases** im Repo.
 
 > Das klappt, weil jede APK mit demselben Schlüssel signiert wird (Ordner `android-signatur`).
 > **Diesen Ordner nicht löschen** – sonst muss die alte App erst deinstalliert werden, und dabei geht die Sammlung verloren.

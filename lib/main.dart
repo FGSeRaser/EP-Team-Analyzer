@@ -10,11 +10,13 @@ import 'package:flutter/material.dart';
 import 'daten/datenbank.dart';
 import 'daten/sammlung.dart';
 import 'daten/sprache.dart';
+import 'daten/updater.dart';
 import 'ui/bereiche.dart';
 import 'ui/helden_liste.dart';
 import 'ui/info_seite.dart';
 import 'ui/sammlung_scope.dart';
 import 'ui/sammlung_seite.dart';
+import 'ui/update_dialog.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -69,7 +71,21 @@ class Startseite extends StatefulWidget {
 
 class _StartseiteState extends State<Startseite> {
   static int _letzterTab = 0;
+  static bool _updateGeprueft = false;
   late int _tab = _letzterTab;
+
+  @override
+  void initState() {
+    super.initState();
+    // Einmal pro App-Start (höchstens einmal am Tag) auf GitHub nach einer neuen Version schauen
+    if (!_updateGeprueft) {
+      _updateGeprueft = true;
+      Future<void>.delayed(const Duration(seconds: 3), () async {
+        final info = await Updater.pruefenWennFaellig();
+        if (info != null && mounted) await zeigeUpdate(context, info);
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

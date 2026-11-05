@@ -6,6 +6,8 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../daten/datenbank.dart';
 import '../daten/sprache.dart';
+import '../daten/updater.dart';
+import 'update_dialog.dart';
 import 'widgets.dart';
 
 const String githubProfil = 'https://github.com/FGSeRaser';
@@ -56,6 +58,7 @@ class InfoSeite extends StatelessWidget {
               onSelectionChanged: (v) => Sprache.instanz.setzen(v.first),
             ),
           ]),
+          const _UpdateBereich(),
           Abschnitt(tx('Datenbank', 'Database'), icon: Icons.storage, kinder: [
             Text(tx('$basis Helden + $kostueme Kostüme', '$basis heroes + $kostueme costumes')),
             Text(tx('${db.passive.length} passive Fähigkeiten · ${db.familien.length} Familien',
@@ -103,5 +106,57 @@ class InfoSeite extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+class _UpdateBereich extends StatefulWidget {
+  const _UpdateBereich();
+
+  @override
+  State<_UpdateBereich> createState() => _UpdateBereichState();
+}
+
+class _UpdateBereichState extends State<_UpdateBereich> {
+  String _version = '…';
+  bool _auto = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _laden();
+  }
+
+  Future<void> _laden() async {
+    final v = await Updater.eigeneVersion();
+    final auto = await Updater.autoAn();
+    if (mounted) {
+      setState(() {
+        _version = '${v.version} (Build ${v.build})';
+        _auto = auto;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Abschnitt(tx('App-Version & Updates', 'App version & updates'), icon: Icons.system_update, kinder: [
+      Text('${tx('Installiert', 'Installed')}: $_version'),
+      const SizedBox(height: 8),
+      FilledButton.icon(
+        onPressed: () => updateSuchen(context),
+        icon: const Icon(Icons.refresh),
+        label: Text(tx('Nach Updates suchen', 'Check for updates')),
+      ),
+      SwitchListTile(
+        contentPadding: EdgeInsets.zero,
+        title: Text(tx('Beim Start automatisch prüfen', 'Check automatically on start')),
+        subtitle: Text(tx('Höchstens einmal am Tag', 'At most once a day')),
+        value: _auto,
+        onChanged: (v) async {
+          await Updater.autoSetzen(v);
+          setState(() => _auto = v);
+        },
+      ),
+    ]);
   }
 }

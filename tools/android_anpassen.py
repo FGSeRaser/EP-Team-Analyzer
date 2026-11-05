@@ -15,6 +15,10 @@ xml = m.read_text(encoding="utf-8")
 if "android.permission.INTERNET" not in xml:
     xml = re.sub(r"(<manifest[^>]*>)",
                  r'\1\n    <uses-permission android:name="android.permission.INTERNET"/>', xml, count=1)
+# Updates aus der App heraus installieren (Android fragt trotzdem jedes Mal nach)
+if "REQUEST_INSTALL_PACKAGES" not in xml:
+    xml = re.sub(r"(<manifest[^>]*>)",
+                 r'\1\n    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>', xml, count=1)
 
 xml = re.sub(r'android:label="[^"]*"', 'android:label="E&amp;P Analyzer"', xml, count=1)
 

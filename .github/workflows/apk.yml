@@ -7,6 +7,10 @@ on:
   push:
   workflow_dispatch:
 
+# Nötig, damit der Workflow ein Release mit der APK anlegen darf
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -44,10 +48,29 @@ jobs:
       - name: Tests
         run: flutter test
 
+      - name: Versionsnummern festlegen
+        id: version
+        run: |
+          # Build-Nummer steigt mit jedem Lauf -> die App erkennt daran neue Versionen
+          echo "build=$((100 + ${{ github.run_number }}))" >> "$GITHUB_OUTPUT"
+          echo "name=$(grep '^version:' pubspec.yaml | sed 's/version: *//; s/+.*//')" >> "$GITHUB_OUTPUT"
+
       - name: APK bauen
-        run: flutter build apk --release
+        run: |
+          flutter build apk --release --build-number=${{ steps.version.outputs.build }} --build-name=${{ steps.version.outputs.name }}
+          cp build/app/outputs/flutter-apk/app-release.apk EP-Team-Analyzer.apk
 
       - uses: actions/upload-artifact@v4
         with:
           name: EP-Team-Analyzer-APK
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: EP-Team-Analyzer.apk
+
+      - name: Release mit APK anlegen (für das Update in der App)
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ steps.version.outputs.build }}
+          name: v${{ steps.version.outputs.name }} (Build ${{ steps.version.outputs.build }})
+          body: ${{ github.event.head_commit.message || 'Neue Heldendaten' }}
+          files: EP-Team-Analyzer.apk
+          make_latest: true
