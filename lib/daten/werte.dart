@@ -40,8 +40,11 @@ class Stand {
   const Stand(this.angriff, this.verteidigung, this.leben, this.kraft);
 }
 
-/// Werte für Grundwerte [Angriff, Verteidigung, Leben] bei Stufe/Level/LB
-Stand berechne(int sterne, List<int> basis, int stufe, int level, int lb) {
+/// Werte für Grundwerte [Angriff, Verteidigung, Leben] bei Stufe/Level/LB.
+/// [kostuemBonus] = [Angriff‰, Verteidigung‰, Leben‰, Mana‰] aus der Kostümtabelle.
+/// Stärke wie im Spiel: Sterne-Grundwert + Werte (inkl. Kostümbonus, ohne Embleme) + 35 + Talentpunkte × 5
+Stand berechne(int sterne, List<int> basis, int stufe, int level, int lb,
+    {int talent = 0, List<int>? kostuemBonus}) {
   final p = _params[sterne] ?? _params[5]!;
   final s = stufe.clamp(1, p.stufenMax.length);
   final maxLb = p.lbZusatz.length;
@@ -65,8 +68,14 @@ Stand berechne(int sterne, List<int> basis, int stufe, int level, int lb) {
   }
 
   int st(int b) => (b * promille / 1000).truncate();
-  final a = st(basis[0]), d = st(basis[1]), h = st(basis[2]);
-  final kraft = (_sternKraft[sterne] ?? 0) + (a * 0.35 + d * 0.28 + h * 0.14).floor() + 35;
+  var a = st(basis[0]), d = st(basis[1]), h = st(basis[2]);
+  if (kostuemBonus != null && kostuemBonus.length >= 3) {
+    int mal(int v, int pm) => (v * (1000 + pm) / 1000).floor();
+    a = mal(a, kostuemBonus[0]);
+    d = mal(d, kostuemBonus[1]);
+    h = mal(h, kostuemBonus[2]);
+  }
+  final kraft = (_sternKraft[sterne] ?? 0) + (a * 0.35 + d * 0.28 + h * 0.14).floor() + 35 + talent * 5;
   return Stand(a, d, h, kraft);
 }
 
@@ -87,4 +96,10 @@ Stand berechne(int sterne, List<int> basis, int stufe, int level, int lb) {
     }
   }
   return (stufe: letzte, level: cap, lb: 0);
+}
+
+/// Kostümbonus für eine Gesamtzahl erreichter Kostüm-Stufen (0 = kein Bonus)
+List<int>? kostuemBonusFuer(List<List<int>> tabelle, int stufenGesamt) {
+  if (tabelle.isEmpty || stufenGesamt <= 0) return null;
+  return tabelle[(stufenGesamt - 1).clamp(0, tabelle.length - 1)];
 }

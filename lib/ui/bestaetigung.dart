@@ -174,7 +174,7 @@ class _BestaetigungSeiteState extends State<BestaetigungSeite> {
   Future<void> _uebernehmen() async {
     final sammlung = SammlungScope.lesen(context);
     final liste = _zuUebernehmen();
-    final n = await sammlung.hinzufuegenMitStand(liste, nurNeue: _nurNeue);
+    final n = await sammlung.hinzufuegenMitStand(liste, nurNeue: _nurNeue, db: widget.db);
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(tx('$n Helden zur Sammlung hinzugefügt.', '$n heroes added to the collection.'))),

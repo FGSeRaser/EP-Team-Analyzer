@@ -19,7 +19,7 @@ import 'widgets.dart';
   for (final e in sammlung.mitHelden(db)) {
     if (e.key.kommend) continue;
     pool.add(e.key);
-    kraft[e.key.id] = e.value.staerke ?? e.value.werte(e.key).kraft;
+    kraft[e.key.id] = sammlung.staerke(db, e.key, e.value);
   }
   return (pool: pool, kraft: kraft);
 }

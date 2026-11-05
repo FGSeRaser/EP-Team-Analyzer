@@ -113,6 +113,7 @@ def main():
         os.path.dirname(os.path.abspath(__file__)), "..", "assets", "data", "helden.json")
 
     chars = lade(f"{hp}/data/characters.json")["charactersConfig"]["heroes"]
+    kostuem_boni = lade(f"{hp}/data/costume_bonuses.json")
     skills_de = lade(f"{hp}/data/heroes_skills_de.json")
     skills_en = lade(f"{hp}/data/heroes_skills_en.json")
     typen = lade(f"{hp}/data/heroes_skill_types.json")
@@ -269,6 +270,16 @@ def main():
         if parent:
             held["c"] = parent
             held["ct"] = kostuem_nr.get(hid, "Kostüm")
+        elif hid in kinder:
+            # Kostümbonus-Tabelle (gilt für den Helden und alle seine Kostüme):
+            # je erreichter Kostüm-Aufstiegsstufe ein Eintrag [Angriff‰, Verteidigung‰, Leben‰, Mana‰]
+            regel = kostuem_boni.get(c.get("costumeBonusesId") or "default") or kostuem_boni.get("default")
+            sb = (regel or {}).get("statBonuses") or []
+            stufen = sb[r - 1].get("bonusLevels") if r - 1 < len(sb) else None
+            if stufen:
+                held["cb"] = [[x.get("attackBonusPerMil", 0), x.get("defenseBonusPerMil", 0),
+                               x.get("healthBonusPerMil", 0), x.get("manaBonusPerMil", 0)] for x in stufen]
+                held["cs"] = 4 if r >= 4 else 3
         if datum_offen:
             held["neu"] = 1
             held["d"] = ""

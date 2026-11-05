@@ -109,6 +109,12 @@ class Held {
   final String spezialNameEn;
   final List<String> spezialEn;
   final String aetherEn;
+
+  /// Nur beim Basis-Helden: Kostümbonus je erreichter Kostüm-Stufe [Angriff‰, Verteidigung‰, Leben‰, Mana‰]
+  final List<List<int>> kostuemTabelle;
+
+  /// Aufstiegsstufen pro Kostüm (4 bei 4–5★, sonst 3)
+  final int kostuemStufen;
   final String _such;
 
   Held({
@@ -143,6 +149,8 @@ class Held {
     this.spezialNameEn = '',
     this.spezialEn = const [],
     this.aetherEn = '',
+    this.kostuemTabelle = const [],
+    this.kostuemStufen = 4,
   }) : _such = '$name $nameEn $titel $titelEn $spezialName $spezialNameEn'.toLowerCase();
 
   // Anzeige in der eingestellten Sprache
@@ -209,6 +217,10 @@ class Held {
       spezialNameEn: (j['skne'] ?? '') as String,
       spezialEn: List<String>.from(j['ske'] as List? ?? const []),
       aetherEn: (j['aee'] ?? '') as String,
+      kostuemTabelle: [
+        for (final e in (j['cb'] as List? ?? const [])) [for (final v in e as List) (v as num).toInt()],
+      ],
+      kostuemStufen: (j['cs'] as num?)?.toInt() ?? 4,
       aether: (j['ae'] ?? '') as String,
     );
   }
@@ -248,6 +260,13 @@ class Datenbank {
   String effektName(String key) => effekte[key]?.label ?? key;
   String bedrohungName(String key) => bedrohungen[key]?.label ?? effektName(key);
   String bedrohungTipp(String key) => bedrohungen[key]?.tipp ?? '';
+
+  /// Nur die Kostüme eines Helden (ohne Basis)
+  List<Held> kostuemeVon(Held h) => varianten(h).where((v) => v.kostuemVon != null).toList();
+
+  /// Kostümbonus-Tabelle der Heldengruppe (steht am Basis-Helden)
+  List<List<int>> kostuemTabelle(Held h) => nachId[h.basisId]?.kostuemTabelle ?? const [];
+  int kostuemStufen(Held h) => nachId[h.basisId]?.kostuemStufen ?? 4;
 
   /// Alle Varianten eines Helden (Basis + Kostüme)
   List<Held> varianten(Held h) {

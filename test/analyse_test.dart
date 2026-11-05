@@ -8,6 +8,7 @@ import 'package:ep_team_analyzer/daten/analyse.dart';
 import 'package:ep_team_analyzer/daten/datenbank.dart';
 import 'package:ep_team_analyzer/daten/namen_suche.dart';
 import 'package:ep_team_analyzer/daten/werte.dart';
+import 'package:ep_team_analyzer/daten/sammlung.dart';
 import 'package:ep_team_analyzer/erkennung/erkennung.dart';
 import 'package:ep_team_analyzer/erkennung/kartentext.dart';
 import 'package:ep_team_analyzer/daten/team_builder.dart';
@@ -155,5 +156,17 @@ void main() {
     expect(leg, isNotEmpty);
     expect(leg.every((e) => e.legendaer!.klasse1 == 'paladin' || e.legendaer!.klasse2 == 'paladin'), isTrue);
     expect(w.epischFuer(edwin).length, 3);
+  });
+
+  test('Kostümbonus: Athena (Toon) mit 2 Kostümen, LB2, Talent 25 = 1751 wie im Spiel', () {
+    final athena = db.nachId['ice_god_athena_costume_cute']!;
+    final tabelle = db.kostuemTabelle(athena);
+    expect(tabelle.length, 8); // 2 Kostüme × 4 Stufen
+    final w = berechne(5, athena.basis, 4, 90, 2, talent: 25, kostuemBonus: kostuemBonusFuer(tabelle, 8));
+    expect(w.kraft, 1751);
+    // Rückrechnung aus der Spiel-Stärke
+    final b = Besitz(id: athena.id, stufe: 4, level: 90, lb: 2, talent: 25, staerke: 1751);
+    expect(Sammlung().kostuemStufenAusStaerke(db, athena, b), 8);
+    expect(db.kostuemeVon(athena).length, 2);
   });
 }

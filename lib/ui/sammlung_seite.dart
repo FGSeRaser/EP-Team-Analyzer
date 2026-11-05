@@ -199,7 +199,7 @@ class _SammlungSeiteState extends State<SammlungSeite> {
   }
 
   /// Stärke laut Spiel, sonst berechnet
-  static int _staerke(MapEntry<Held, Besitz> e) => e.value.staerke ?? e.value.werte(e.key).kraft;
+  int _staerke(MapEntry<Held, Besitz> e) => SammlungScope.lesen(context).staerke(widget.db, e.key, e.value);
 
   Widget _leer(ThemeData t) => ListView(
         padding: const EdgeInsets.all(24),

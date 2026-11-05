@@ -104,12 +104,63 @@ class Sammlung extends ChangeNotifier {
   static const _schluessel = 'sammlung_v1';
   final Map<String, Besitz> _helden = {};
 
+  /// Kostüme je Basis-Held: Kostüm-ID -> erreichte Aufstiegsstufe (0 = nicht im Besitz)
+  final Map<String, Map<String, int>> _kostueme = {};
+
   Iterable<Besitz> get alle => _helden.values;
   int get anzahlVerschiedene => _helden.length;
   int get anzahlGesamt => _helden.values.fold(0, (a, b) => a + b.anzahl);
   Set<String> get ids => _helden.keys.toSet();
   bool hat(String id) => _helden.containsKey(id);
   Besitz? besitz(String id) => _helden[id];
+
+  /// Kostüm-Stufen der Heldengruppe. Ein Kostüm, das als Held in der Sammlung steht
+  /// (z. B. aus dem Screenshot), zählt ohne eigene Angabe als voll aufgestiegen.
+  Map<String, int> kostuemStufen(Datenbank db, Held h) {
+    final out = <String, int>{};
+    final max = db.kostuemStufen(h);
+    for (final k in db.kostuemeVon(h).where((k) => !k.kommend)) {
+      final gesetzt = _kostueme[h.basisId]?[k.id];
+      out[k.id] = gesetzt ?? (_helden.containsKey(k.id) ? max : 0);
+    }
+    return out;
+  }
+
+  int kostuemStufenGesamt(Datenbank db, Held h) => kostuemStufen(db, h).values.fold(0, (a, b) => a + b);
+
+  /// Werte wie im Spiel: Level/LB/Talent + Kostümbonus der ganzen Heldengruppe
+  Stand werte(Datenbank db, Held h, Besitz b) => berechne(h.sterne, h.basis, b.stufe, b.level, b.lb,
+      talent: b.talent, kostuemBonus: kostuemBonusFuer(db.kostuemTabelle(h), kostuemStufenGesamt(db, h)));
+
+  /// Stärke laut Spiel (aus Screenshot), sonst berechnet
+  int staerke(Datenbank db, Held h, Besitz b) => b.staerke ?? werte(db, h, b).kraft;
+
+  Future<void> kostuemeSetzen(String basisId, Map<String, int> stufen) async {
+    _kostueme[basisId] = Map.of(stufen);
+    await _speichern();
+    notifyListeners();
+  }
+
+  /// Aus der Stärke laut Spiel zurückrechnen, wie viele Kostüm-Stufen es sein müssen.
+  /// Liefert null, wenn keine Anzahl genau (±2) passt.
+  int? kostuemStufenAusStaerke(Datenbank db, Held h, Besitz b) {
+    final ziel = b.staerke;
+    final tabelle = db.kostuemTabelle(h);
+    if (ziel == null || tabelle.isEmpty) return null;
+    int? beste;
+    var abstand = 3;
+    for (var n = 0; n <= tabelle.length; n++) {
+      final kraft = berechne(h.sterne, h.basis, b.stufe, b.level, b.lb,
+              talent: b.talent, kostuemBonus: kostuemBonusFuer(tabelle, n))
+          .kraft;
+      final d = (kraft - ziel).abs();
+      if (d < abstand) {
+        abstand = d;
+        beste = n;
+      }
+    }
+    return beste;
+  }
 
   Future<void> laden() async {
     final prefs = await SharedPreferences.getInstance();
@@ -137,7 +188,7 @@ class Sammlung extends ChangeNotifier {
   /// Level/Talent/Stärke aus dem Screenshot werden übernommen; bei mehreren
   /// Exemplaren zählt das stärkste. Mit [nurNeue] werden Helden, die schon
   /// VORHER in der Sammlung waren, nicht verändert.
-  Future<int> hinzufuegenMitStand(List<NeuerHeld> liste, {bool nurNeue = true}) async {
+  Future<int> hinzufuegenMitStand(List<NeuerHeld> liste, {bool nurNeue = true, Datenbank? db}) async {
     final vorher = ids;
     var neu = 0;
     for (final n in liste) {
@@ -161,9 +212,33 @@ class Sammlung extends ChangeNotifier {
       }
       neu++;
     }
+    if (db != null) _kostuemeAusStaerke(db, liste);
     await _speichern();
     notifyListeners();
     return neu;
+  }
+
+  /// Für neu gelesene Helden mit Stärke aus dem Spiel: Kostüm-Stufen zurückrechnen,
+  /// falls für die Heldengruppe noch nichts eingetragen ist
+  void _kostuemeAusStaerke(Datenbank db, List<NeuerHeld> liste) {
+    for (final n in liste) {
+      final h = n.held;
+      final b = _helden[h.id];
+      if (b == null || b.staerke == null || _kostueme.containsKey(h.basisId)) continue;
+      final gesamt = kostuemStufenAusStaerke(db, h, b);
+      if (gesamt == null || gesamt == 0) continue;
+      final max = db.kostuemStufen(h);
+      final ids = db.kostuemeVon(h).where((k) => !k.kommend).map((k) => k.id).toList()
+        ..sort((x, y) => (y == h.id ? 1 : 0).compareTo(x == h.id ? 1 : 0)); // gespielte Variante zuerst
+      var rest = gesamt;
+      final stufen = <String, int>{};
+      for (final id in ids) {
+        final s = rest >= max ? max : rest;
+        stufen[id] = s;
+        rest -= s;
+      }
+      _kostueme[h.basisId] = stufen;
+    }
   }
 
   Future<void> aktualisieren(Besitz b) async {
@@ -184,6 +259,7 @@ class Sammlung extends ChangeNotifier {
 
   Future<void> leeren() async {
     _helden.clear();
+    _kostueme.clear();
     await _speichern();
     notifyListeners();
   }
@@ -192,6 +268,7 @@ class Sammlung extends ChangeNotifier {
         'app': 'E&P Team-Analyzer (FGSeRaser)',
         'version': 1,
         'helden': [for (final b in _helden.values) b.toJson()],
+        if (_kostueme.isNotEmpty) 'kostueme': _kostueme,
       });
 
   /// Liefert die Anzahl importierter Helden
@@ -205,7 +282,17 @@ class Sammlung extends ChangeNotifier {
   int _importiere(String text, {required bool ersetzen}) {
     final j = jsonDecode(text);
     final liste = j is Map ? (j['helden'] as List? ?? const []) : (j as List);
-    if (ersetzen) _helden.clear();
+    if (ersetzen) {
+      _helden.clear();
+      _kostueme.clear();
+    }
+    if (j is Map && j['kostueme'] is Map) {
+      (j['kostueme'] as Map).forEach((basis, m) {
+        _kostueme[basis as String] = {
+          for (final e in (m as Map).entries) e.key as String: (e.value as num).toInt(),
+        };
+      });
+    }
     var n = 0;
     for (final x in liste) {
       final b = Besitz.ausJson(Map<String, dynamic>.from(x as Map));
