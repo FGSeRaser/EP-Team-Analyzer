@@ -17,15 +17,39 @@ class GegnerAuswahl {
   final Held? held;
   final GegnerStand? stand;
   final bool wechseln;
-  const GegnerAuswahl({this.held, this.stand, this.wechseln = false});
+
+  /// Eigenes Team: Änderungen auch unter „Meine Helden“ speichern
+  final bool speichern;
+  const GegnerAuswahl({this.held, this.stand, this.wechseln = false, this.speichern = false});
 }
 
-Future<GegnerAuswahl?> gegnerBearbeiten(BuildContext context, Datenbank db, Held held, GegnerStand stand) {
+/// [eigen] = eigener Held (Team-Check), sonst Gegner
+Future<GegnerAuswahl?> gegnerBearbeiten(BuildContext context, Datenbank db, Held held, GegnerStand stand, {bool eigen = false}) {
   return showModalBottomSheet<GegnerAuswahl>(
     context: context,
     isScrollControlled: true,
     showDragHandle: true,
-    builder: (_) => _GegnerSheet(db: db, held: held, start: stand),
+    builder: (_) => _GegnerSheet(db: db, held: held, start: stand, eigen: eigen),
+  );
+}
+
+/// Stand eines eigenen Helden aus „Meine Helden“ (Stufe, Level, LB, Talent, Kostüme)
+GegnerStand? standAusSammlung(Sammlung sammlung, Datenbank db, Held h) {
+  var b = sammlung.besitz(h.id);
+  if (b == null) {
+    for (final v in db.varianten(h)) {
+      b = sammlung.besitz(v.id);
+      if (b != null) break;
+    }
+  }
+  if (b == null) return null;
+  return GegnerStand(
+    stufe: b.stufe,
+    level: b.level,
+    lb: b.lb,
+    talent: b.talent,
+    kost: sammlung.kostuemStufen(db, h),
+    staerke: b.id == h.id ? b.staerke : null,
   );
 }
 
@@ -33,7 +57,8 @@ class _GegnerSheet extends StatefulWidget {
   final Datenbank db;
   final Held held;
   final GegnerStand start;
-  const _GegnerSheet({required this.db, required this.held, required this.start});
+  final bool eigen;
+  const _GegnerSheet({required this.db, required this.held, required this.start, this.eigen = false});
 
   @override
   State<_GegnerSheet> createState() => _GegnerSheetState();
@@ -42,6 +67,7 @@ class _GegnerSheet extends StatefulWidget {
 class _GegnerSheetState extends State<_GegnerSheet> {
   late GegnerStand _s;
   late String _aussehen;
+  bool _speichern = false;
   final _staerkeFeld = TextEditingController();
 
   Datenbank get db => widget.db;
@@ -117,7 +143,8 @@ class _GegnerSheetState extends State<_GegnerSheet> {
             const SizedBox(width: 12),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(tx('Gegner: ${h.anzeigeName}', 'Enemy: ${h.anzeigeName}'), style: t.textTheme.titleLarge),
+                Text(widget.eigen ? h.anzeigeName : tx('Gegner: ${h.anzeigeName}', 'Enemy: ${h.anzeigeName}'),
+                    style: t.textTheme.titleLarge),
                 Sterne(h.sterne),
               ]),
             ),
@@ -128,8 +155,12 @@ class _GegnerSheetState extends State<_GegnerSheet> {
             ),
           ]),
           const SizedBox(height: 8),
-          Text(tx('Stell den Helden so ein, wie der Gegner ihn hat. Kostüme ändern Werte und teils auch die Fähigkeiten.',
-              'Set the hero up like the enemy has it. Costumes change stats and sometimes the skills.'),
+          Text(
+              widget.eigen
+                  ? tx('Stell deinen Helden so ein, wie du ihn hast. Kostüme ändern Werte und teils auch die Fähigkeiten.',
+                      'Set your hero up the way you have it. Costumes change stats and sometimes the skills.')
+                  : tx('Stell den Helden so ein, wie der Gegner ihn hat. Kostüme ändern Werte und teils auch die Fähigkeiten.',
+                      'Set the hero up like the enemy has it. Costumes change stats and sometimes the skills.'),
               style: t.textTheme.bodySmall),
 
           // ---------- Kostüm ----------
@@ -150,7 +181,10 @@ class _GegnerSheetState extends State<_GegnerSheet> {
                 ),
             ]),
             const SizedBox(height: 10),
-            Text(tx('Kostüm-Stufen des Gegners (– = hat er nicht)', 'Enemy costume levels (– = not owned)'),
+            Text(
+                widget.eigen
+                    ? tx('Kostüm-Stufen (– = nicht im Besitz)', 'Costume levels (– = not owned)')
+                    : tx('Kostüm-Stufen des Gegners (– = hat er nicht)', 'Enemy costume levels (– = not owned)'),
                 style: t.textTheme.titleSmall),
             const SizedBox(height: 4),
             for (final k in kostueme)
@@ -278,10 +312,18 @@ class _GegnerSheetState extends State<_GegnerSheet> {
             Padding(
               padding: const EdgeInsets.only(top: 4),
               child: Text(
-                tx('Spiel: ${_s.staerke} · berechnet: ${w.kraft} – für die Chance zählt die Spiel-Stärke.',
-                    'Game: ${_s.staerke} · calculated: ${w.kraft} – the game power is used for the chance.'),
+                tx('Spiel: ${_s.staerke} · berechnet: ${w.kraft} – es zählt die Spiel-Stärke.',
+                    'Game: ${_s.staerke} · calculated: ${w.kraft} – the game power is used.'),
                 style: t.textTheme.bodySmall?.copyWith(color: Colors.orange),
               ),
+            ),
+          if (widget.eigen)
+            SwitchListTile(
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+              title: Text(tx('Auch unter „Meine Helden“ speichern', 'Also save under "My heroes"')),
+              value: _speichern,
+              onChanged: (v) => setState(() => _speichern = v),
             ),
           const SizedBox(height: 12),
           Row(children: [
@@ -303,7 +345,7 @@ class _GegnerSheetState extends State<_GegnerSheet> {
             FilledButton(
               onPressed: () {
                 _korrigieren();
-                Navigator.pop(context, GegnerAuswahl(held: _held, stand: _s));
+                Navigator.pop(context, GegnerAuswahl(held: _held, stand: _s, speichern: _speichern));
               },
               child: Text(tx('Übernehmen', 'Apply')),
             ),

@@ -8,7 +8,10 @@ import '../daten/team_builder.dart';
 import '../daten/truppen.dart';
 import '../daten/truppen_besitz.dart';
 import '../daten/datenbank.dart';
+import '../daten/gegner_stand.dart';
+import '../daten/sammlung.dart';
 import '../daten/sprache.dart';
+import 'gegner_held_sheet.dart';
 import 'held_detail.dart';
 import 'helden_liste.dart';
 import 'meine_truppen_seite.dart';
@@ -33,12 +36,62 @@ class _TeamCheckState extends State<TeamCheck> {
   final List<Held?> _slots = List<Held?>.filled(5, null);
   final List<EigeneTruppe?> _truppen = List<EigeneTruppe?>.filled(5, null);
 
+  /// Ausbau je Platz: Stufe, Level, LB, Talent, Kostüme (aus „Meine“ oder eingestellt)
+  final List<GegnerStand?> _stand = List<GegnerStand?>.filled(5, null);
+
   @override
   void initState() {
     super.initState();
+    final sammlung = SammlungScope.lesen(context);
     for (var i = 0; i < widget.start.length && i < 5; i++) {
       _slots[i] = widget.start[i];
       _truppen[i] = widget.startTruppen[widget.start[i].id];
+      _stand[i] = standAusSammlung(sammlung, widget.db, widget.start[i]);
+    }
+  }
+
+  GegnerStand _standVon(int i) => _stand[i] ?? GegnerStand.standard(_slots[i]!);
+  int _kraft(int i) => _standVon(i).kraft(widget.db, _slots[i]!);
+
+  /// Kostüm, Level, LB, Talent einstellen – optional auch in „Meine“ speichern
+  Future<void> _bearbeiten(int i) async {
+    final h = _slots[i];
+    if (h == null) return;
+    final erg = await gegnerBearbeiten(context, widget.db, h, _standVon(i), eigen: true);
+    if (erg == null || !mounted) return;
+    if (erg.wechseln) {
+      await _waehle(i);
+      return;
+    }
+    final neuH = erg.held ?? h;
+    final st = erg.stand;
+    setState(() {
+      _slots[i] = neuH;
+      if (st != null) _stand[i] = st;
+      if (_truppen[i] != null && _truppen[i]!.farbe != neuH.element) _truppen[i] = null;
+    });
+    if (erg.speichern && st != null) {
+      final sammlung = SammlungScope.lesen(context);
+      await sammlung.kostuemeSetzen(neuH.basisId, st.kost);
+      // Alte Variante entfernen, wenn das Aussehen gewechselt wurde
+      for (final v in widget.db.varianten(neuH)) {
+        if (v.id != neuH.id && sammlung.hat(v.id)) await sammlung.entfernen(v.id);
+      }
+      final alt = sammlung.besitz(neuH.id);
+      await sammlung.aktualisieren(Besitz(
+        id: neuH.id,
+        anzahl: alt?.anzahl ?? 1,
+        stufe: st.stufe,
+        level: st.level,
+        lb: st.lb,
+        talent: st.talent,
+        staerke: st.staerke,
+        notiz: alt?.notiz ?? '',
+      ));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(tx('${neuH.nameL} unter „Meine Helden“ gespeichert', '${neuH.nameL} saved under "My heroes"'))));
+      }
     }
   }
 
@@ -59,10 +112,14 @@ class _TeamCheckState extends State<TeamCheck> {
       ),
     );
     if (h != null) {
+      final st = standAusSammlung(SammlungScope.lesen(context), widget.db, h);
       setState(() {
         _slots[i] = h;
+        _stand[i] = st;
         if (_truppen[i] != null && _truppen[i]!.farbe != h.element) _truppen[i] = null;
       });
+      // Nicht in „Meine“? Dann gleich einstellen lassen
+      if (st == null) await _bearbeiten(i);
     }
   }
 
@@ -165,6 +222,7 @@ class _TeamCheckState extends State<TeamCheck> {
               onPressed: () => setState(() {
                 _slots.fillRange(0, 5, null);
                 _truppen.fillRange(0, 5, null);
+                _stand.fillRange(0, 5, null);
               }),
             ),
         ],
@@ -179,7 +237,7 @@ class _TeamCheckState extends State<TeamCheck> {
                 for (var i = 0; i < 5; i++)
                   Expanded(
                     child: GestureDetector(
-                      onTap: () => _waehle(i),
+                      onTap: () => _slots[i] == null ? _waehle(i) : _bearbeiten(i),
                       onLongPress: _slots[i] == null
                           ? null
                           : () => Navigator.push(
@@ -204,6 +262,22 @@ class _TeamCheckState extends State<TeamCheck> {
                           style: t.textTheme.labelSmall,
                           overflow: TextOverflow.ellipsis,
                         ),
+                        if (_slots[i] != null) ...[
+                          if (_slots[i]!.kostuemVon != null)
+                            Text(_slots[i]!.kostuemL,
+                                style: t.textTheme.labelSmall?.copyWith(fontSize: 9, color: t.colorScheme.primary),
+                                maxLines: 1, overflow: TextOverflow.ellipsis),
+                          Text('${_kraft(i)}', style: t.textTheme.labelSmall),
+                          Text(
+                            [
+                              'Lv ${_standVon(i).level}',
+                              if (_standVon(i).kurz(_slots[i]!).isNotEmpty) _standVon(i).kurz(_slots[i]!),
+                            ].join(' · '),
+                            style: t.textTheme.labelSmall?.copyWith(fontSize: 9),
+                            maxLines: 2,
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
                         if (_slots[i] != null)
                           InkWell(
                             onTap: () => _truppeWaehlen(i),
@@ -227,6 +301,7 @@ class _TeamCheckState extends State<TeamCheck> {
                             onTap: () => setState(() {
                               _slots[i] = null;
                               _truppen[i] = null;
+                              _stand[i] = null;
                             }),
                             child: const Padding(
                               padding: EdgeInsets.all(2),
@@ -241,9 +316,21 @@ class _TeamCheckState extends State<TeamCheck> {
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Text(tx('Tippen = Held wählen · Gedrückt halten = Details', 'Tap = pick hero · Long press = details'),
+            child: Text(
+                tx('Leeren Platz antippen = Held wählen · Held antippen = Kostüm, Level, LB, Talent · Gedrückt halten = Details',
+                    'Tap empty slot = pick hero · Tap hero = costume, level, LB, talent · Long press = details'),
                 style: t.textTheme.bodySmall, textAlign: TextAlign.center),
           ),
+          if (team.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
+              child: Text(
+                tx('Teamstärke: ${[for (var i = 0; i < 5; i++) if (_slots[i] != null) _kraft(i)].fold(0, (a, b) => a + b)}',
+                    'Team power: ${[for (var i = 0; i < 5; i++) if (_slots[i] != null) _kraft(i)].fold(0, (a, b) => a + b)}'),
+                style: t.textTheme.titleSmall,
+                textAlign: TextAlign.center,
+              ),
+            ),
           if (team.isEmpty)
             Padding(
               padding: EdgeInsets.all(24),
