@@ -361,3 +361,168 @@ ROLLEN = {
                            "mana_cut": 2, "buff_block": 1, "cleanse_block": 1},
                "werte": {"attack": 0.4, "health": 0.3, "defense": 0.3}},
 }
+
+
+# ==========================================================================
+# Englische Texte (für die Sprachumschaltung)
+# ==========================================================================
+EFFEKTE_EN = {
+    "hit_single": "Single-target attack", "hit_aoe": "Hits all enemies", "hit_three": "Hits 3 enemies",
+    "hit_spread": "Spread damage to neighbours", "hit_random": "Random/variable targets", "hit_edges": "Hits the edges",
+    "hit_chain": "Chain attack", "extra_attack": "Extra attack", "bypass": "Bypasses defensive buffs",
+    "unmissable": "Never misses / ignores dodge", "elem_dmg_up": "Elemental damage up", "atk_up": "Attack up",
+    "crit_up": "Crit chance up", "copy_skill": "Copies/steals skills",
+    "dot": "Damage over time", "dot_poison": "Poison", "dot_burn": "Burn", "dot_bleed": "Bleed",
+    "dot_frost": "Frost", "dot_water": "Water", "dot_sand": "Sand", "dot_curse": "Curse", "dot_other": "Other DoT",
+    "pain_share": "Pain empathy",
+    "def_down": "Defense down", "elem_def_down": "Elemental defense down", "dmg_taken_up": "Damage received up",
+    "atk_down": "Attack down", "acc_down": "Accuracy down (blind)", "heal_block": "Healing down/blocked",
+    "maxhp_down": "Max health down", "revive_block": "Blocks revive", "cleanse_block": "Blocks cleanse",
+    "buff_block": "Blocks buffs (buff immunity)", "color_change": "Changes color/position",
+    "mana_debuff": "Mana generation down/blocked", "mana_cut": "Mana reduction", "mana_steal": "Mana steal",
+    "special_block": "Blocks special (silence/sleep/paralysis)", "insanity": "Insanity",
+    "mana_up": "Mana generation up", "mana_gain": "Mana gain",
+    "dispel": "Dispel buffs", "steal_buff": "Steal buffs", "buff_turns_down": "Shorten buffs",
+    "ailment_turns_up": "Extend ailments",
+    "heal": "Instant heal", "heal_ot": "Heal over time", "health_boost": "Boosted health (over max)",
+    "revive": "Revive", "self_revive": "Self revive", "lifesteal": "Heal from damage", "heal_up": "Healing up",
+    "def_up": "Defense up", "elem_def_up": "Elemental defense up", "special_def_up": "Special damage protection",
+    "dmg_reduction": "Damage reduction", "share_damage": "Damage sharing", "dodge": "Dodge", "mimic": "Mimic",
+    "counter": "Counterattack/reflect", "taunt": "Taunt", "stealth": "Stealth/ambush", "ghost": "Ghost form",
+    "dispel_protect": "Dispel protection",
+    "cleanse": "Cleanse ailments", "ailment_immune": "Ailment immunity", "ailment_block": "Block new ailments",
+    "ailment_reflect": "Reflect ailments", "ailment_realloc": "Reallocate ailments",
+    "ailment_turns_down": "Shorten ailments",
+    "minions": "Minions", "mega_minions": "Mega minions", "minion_destroy": "Destroy/bypass minions",
+    "minion_block": "Block minions", "fiend": "Fiends", "fiend_destroy": "Destroy fiends", "fiend_block": "Block fiends",
+    "self_debuff": "Self debuff", "gamble": "Gamble/random effect", "field": "Field effect",
+}
+
+BEDROHUNGEN_EN = {
+    "mana_debuff": ("Mana slow", "Cleanse or ailment immunity, otherwise your specials come too late."),
+    "mana_cut": ("Mana reduction", "Can't be cleansed – only the passive 'Resist mana reduction' or fast mana helps."),
+    "mana_steal": ("Mana steal", "Cleansing removes the steal effect."),
+    "special_block": ("Silence/sleep/paralysis", "Without cleanse the hero can't use the special skill."),
+    "insanity": ("Insanity", "Insane heroes randomly hit allies too."),
+    "dot": ("Damage over time", "Cleanse – or out-heal it."),
+    "def_down": ("Defense lowered", "Enemies deal much more damage – cleanse or raise defense."),
+    "elem_def_down": ("Elemental defense lowered", "Usually hits one color especially hard."),
+    "dmg_taken_up": ("Damage received up", "Works like defense down."),
+    "atk_down": ("Attack lowered", "Your attackers deal less damage."),
+    "acc_down": ("Blind (accuracy down)", "Attacks miss – cleanse or use heroes that never miss."),
+    "heal_block": ("Healing blocked/lowered", "Cleanse first, then heal."),
+    "maxhp_down": ("Max health lowered", "Permanently lowers how much you can heal."),
+    "revive_block": ("Revive blocked", "Only matters if your team relies on revives."),
+    "cleanse_block": ("Cleanse blocked", "Only immunity or ailment blocking helps – cleansing won't work."),
+    "buff_block": ("Buffs blocked", "Your buffs don't apply until you cleanse."),
+    "dispel": ("Buffs get dispelled", "Buff after the enemy dispel, or use dispel protection."),
+    "steal_buff": ("Buffs get stolen", "Stolen buffs empower the enemy – careful with strong buffs."),
+    "taunt": ("Taunt", "Dispel it, otherwise all single-target damage goes to the tank."),
+    "counter": ("Counterattack/reflect", "Dispel or bypass first, otherwise you hurt yourself."),
+    "def_up": ("Enemy defense up", "Dispel or bypass."),
+    "dmg_reduction": ("Enemy damage reduction", "Dispel or bypass."),
+    "dodge": ("Dodge", "Use heroes that never miss, or dispel."),
+    "mimic": ("Mimic", "Mimic copies your special – dispel first."),
+    "minions": ("Minions", "Minions soak damage – destroy, bypass or clear them with AoE."),
+    "fiend": ("Fiends", "Fiends drain health/mana – destroy or block them."),
+    "revive": ("Enemies revive", "Block revives or kill targets in quick succession."),
+    "heal": ("Enemies heal a lot", "Block healing, otherwise the fight drags on."),
+    "self_revive": ("Enemies revive themselves", "Block revives."),
+    "ghost": ("Ghost form", "Targets in ghost form are hard to hit."),
+    "stealth": ("Stealth", "AoE also hits hidden heroes."),
+    "ailments": ("Ailments in general", "Collective term for all negative status effects."),
+}
+for _k in ["dot_poison", "dot_burn", "dot_bleed", "dot_frost", "dot_water", "dot_sand", "dot_curse"]:
+    BEDROHUNGEN_EN[_k] = (EFFEKTE_EN[_k], BEDROHUNGEN_EN["dot"][1])
+
+ROLLEN_EN = {"tank": "Tank (defense center)", "flanke": "Flank (defense outside)", "angreifer": "Attacker (damage)",
+             "heiler": "Healer/support", "konter": "Dispel & control"}
+
+
+# ==========================================================================
+# Truppen
+# ==========================================================================
+# Klassen-Schlüssel wie im Spiel (characters.json classType, kleingeschrieben)
+KLASSEN = ["wizard", "ranger", "paladin", "druid", "barbarian", "monk", "sorcerer", "rogue", "fighter", "cleric"]
+
+# Passive der legendären Truppen: Schlüssel -> (deutsch, englisch, passende Rollen)
+TRUPPEN_PASSIVE = {
+    "crit":          ("Krit-Chance erhöht", "Critical chance up", ["angreifer"]),
+    "atk_add":       ("Zusätzlicher Angriff", "Attack addition", ["angreifer", "flanke"]),
+    "atk_red":       ("Senkt Angriff des Gegners", "Attack reduction", ["tank", "konter"]),
+    "def_add":       ("Zusätzliche Verteidigung", "Defense addition", ["tank"]),
+    "def_red":       ("Senkt Verteidigung des Gegners", "Defense reduction", ["angreifer"]),
+    "ailment_dmg":   ("Weniger Schaden durch Leiden", "Debuff damage reduction", ["tank", "heiler"]),
+    "resist":        ("Leiden widerstehen", "Resist debuffs", ["tank", "heiler", "flanke"]),
+    "special_dmg":   ("Mehr Spezialschaden", "Increase special damage", ["angreifer", "flanke"]),
+    "special_def":   ("Weniger Spezialschaden erhalten", "Special damage reduction", ["tank"]),
+    "heal_extra":    ("Extra-Heilung beim Heilen", "Extra heal on heal", ["heiler"]),
+}
+
+# Legendäre Truppen (gibt es in allen 5 Farben): Name, Hauptklasse, Nebenklasse, Passiv
+TRUPPEN_LEGENDAER = [
+    ("Arcane Hunter", "ranger", "sorcerer", "crit"),
+    ("Battle Master Assassin", "rogue", "fighter", "atk_add"),
+    ("Devoted Knight", "paladin", "cleric", "ailment_dmg"),
+    ("Divine Cleric", "cleric", "paladin", "resist"),
+    ("Eldest Wizard", "wizard", "ranger", "special_dmg"),
+    ("Elite Knight", "paladin", "rogue", "def_add"),
+    ("Enchanted Ent", "druid", "barbarian", "ailment_dmg"),
+    ("Enlightened Tree Spirit", "druid", "wizard", "def_add"),
+    ("Eternal Hunter", "ranger", "wizard", "atk_red"),
+    ("Furious Monk", "monk", "barbarian", "heal_extra"),
+    ("Hunter Mage", "sorcerer", "ranger", "def_red"),
+    ("Majestic Minotaur", "barbarian", "druid", "atk_add"),
+    ("Mighty Monk", "monk", "sorcerer", "resist"),
+    ("Royal Sorcerer", "sorcerer", "monk", "special_def"),
+    ("Serene Brute", "barbarian", "monk", "special_dmg"),
+    ("Shaman Wizard", "wizard", "druid", "special_def"),
+    ("Swashbuckler Fighter", "fighter", "rogue", "atk_red"),
+    ("Unseen Assassin", "rogue", "paladin", "crit"),
+    ("Unstoppable Fighter", "fighter", "cleric", "def_red"),
+    ("Unwavering Cleric", "cleric", "fighter", "heal_extra"),
+]
+
+# Epische Truppentypen (je Farbe eine) – Mana-Stufen laut Spielguides
+TRUPPEN_EPISCH = [
+    {"id": "mana", "de": "Mana-Truppe", "en": "Mana troop", "sterne": 4,
+     "mana": [[1, 5], [5, 7], [11, 9], [17, 11], [23, 13], [29, 15]],
+     "text_de": "Schnellere Spezialfähigkeit (bis +15 % Mana). Standard für Angriff, Raids und Krieg.",
+     "text_en": "Faster special (up to +15% mana). Standard for attack, raids and war.",
+     "modi": ["angriff", "krieg"]},
+    {"id": "krit", "de": "Krit-Truppe", "en": "Crit troop", "sterne": 4,
+     "krit": [[1, 5], [3, 6], [7, 7], [10, 8], [14, 9], [18, 10], [21, 11], [25, 12], [30, 13]],
+     "text_de": "Mehr Verteidigung und bis 13 % kritische Treffer (doppelter Steinschaden). Für Verteidigung und Titanen.",
+     "text_en": "More defense and up to 13% critical hits (double tile damage). For defense and titans.",
+     "modi": ["verteidigung", "titan"]},
+    {"id": "magie", "de": "Magie-Truppe (Turm der Magie)", "en": "Magic troop (Tower of Magic)", "sterne": 4,
+     "mana": [[1, 5], [5, 8], [11, 11], [17, 14], [23, 17], [29, 20]],
+     "namen": {"blau": "Veteran Wizard", "gruen": "Ancient Wizard", "rot": "Merciless Wizards",
+               "gelb": "Divine Wizards", "lila": "Wayward Wizards"},
+     "text_de": "Stärkste Mana-Truppe (bis +20 %). Ideal für langsame und mittlere Helden.",
+     "text_en": "Strongest mana troop (up to +20%). Ideal for slow and average heroes.",
+     "modi": ["angriff", "krieg"]},
+    {"id": "styx", "de": "Styx-Truppe (Zyklop)", "en": "Styx troop (Cyclops)", "sterne": 4,
+     "mana": [[1, 5], [5, 8], [12, 11], [16, 14], [23, 17], [27, 20]],
+     "namen": {"blau": "Conjurer Cyclopes", "gruen": "Menacing Cyclopes", "rot": "Ferocious Cyclopes",
+               "gelb": "Fierce Cyclopes", "lila": "Savage Cyclopes"},
+     "text_de": "Bis +20 % Mana und Chance, Verteidigungsboni zu umgehen. Sehr stark im Angriff.",
+     "text_en": "Up to +20% mana plus a chance to bypass defensive buffs. Very strong on offense.",
+     "modi": ["angriff", "krieg"]},
+    {"id": "ninja", "de": "Ninja-Truppe", "en": "Ninja troop", "sterne": 4,
+     "umgehen": [[1, 5], [5, 7], [11, 9], [17, 11], [23, 13], [29, 15]],
+     "namen": {"blau": "Wakizashi Ninja", "gruen": "Kusarigama Ninjas", "rot": "Sai Ninjas",
+               "gelb": "Nunchaku Ninjas", "lila": "Bo Ninjas"},
+     "text_de": "Höchster Angriff, bis 15 % Chance pro Stein, Verteidigungsboni zu umgehen. Kein Mana-Bonus.",
+     "text_en": "Highest attack, up to 15% chance per tile to bypass defensive buffs. No mana bonus.",
+     "modi": ["angriff", "titan"]},
+]
+
+# Mana-Schwellen: Tempo -> [(nötiger Mana-Bonus in %, Steine)]
+MANA_SCHWELLEN = {
+    # nur Werte, die in den Guides belegt sind (inkl. aller Mana-Quellen: Truppe, Kostüm +5 %, Embleme +2/4 %)
+    "fast": [[0, 8], [15, 7]],
+    "average": [[0, 10], [13, 9]],
+    "slow": [[0, 12], [11, 11]],
+    "very_slow": [[0, 14], [7, 13]],
+}

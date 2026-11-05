@@ -44,3 +44,41 @@ if "mlkit" not in inhalt:
 """
     regeln.write_text(inhalt, encoding="utf-8")
     print("ProGuard-Regeln für ML Kit angelegt.")
+
+# App-Icon (aus tools/icon_bauen.py) in alle Auflösungen kopieren + adaptives Icon für Android 8+
+import shutil  # noqa: E402
+
+res = Path("android/app/src/main/res")
+quelle = Path("android-icon")
+if quelle.exists():
+    for ordner in quelle.iterdir():
+        if ordner.is_dir():
+            ziel = res / ordner.name
+            ziel.mkdir(parents=True, exist_ok=True)
+            for datei in ordner.iterdir():
+                shutil.copy(datei, ziel / datei.name)
+    adaptiv = res / "mipmap-anydpi-v26"
+    adaptiv.mkdir(parents=True, exist_ok=True)
+    xml_icon = """<?xml version="1.0" encoding="utf-8"?>
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/ic_launcher_background"/>
+    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
+</adaptive-icon>
+"""
+    (adaptiv / "ic_launcher.xml").write_text(xml_icon, encoding="utf-8")
+    (adaptiv / "ic_launcher_round.xml").write_text(xml_icon, encoding="utf-8")
+    werte = res / "values"
+    werte.mkdir(parents=True, exist_ok=True)
+    (werte / "ic_launcher_background.xml").write_text(
+        """<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ic_launcher_background">#16224E</color>
+</resources>
+""", encoding="utf-8")
+    m = Path("android/app/src/main/AndroidManifest.xml")
+    xml = m.read_text(encoding="utf-8")
+    if "android:roundIcon" not in xml:
+        xml = xml.replace('android:icon="@mipmap/ic_launcher"',
+                          'android:icon="@mipmap/ic_launcher"\n        android:roundIcon="@mipmap/ic_launcher_round"', 1)
+        m.write_text(xml, encoding="utf-8")
+    print("App-Icon eingebaut.")

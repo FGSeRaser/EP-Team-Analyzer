@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 
 import '../daten/analyse.dart';
 import '../daten/datenbank.dart';
+import '../daten/sprache.dart';
 import '../daten/sammlung.dart';
 import 'besitz_bearbeiten.dart';
 import 'eingabe_screenshot.dart';
@@ -34,20 +35,20 @@ class _SammlungSeiteState extends State<SammlungSeite> {
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           ListTile(
             leading: const Icon(Icons.photo_library),
-            title: const Text('Screenshots einlesen'),
-            subtitle: const Text('Heldenliste aus dem Spiel abfotografieren'),
+            title: Text(tx('Screenshots einlesen', 'Read screenshots')),
+            subtitle: Text(tx('Heldenliste aus dem Spiel abfotografieren', 'Screenshot the hero list in the game')),
             onTap: () => Navigator.pop(ctx, 0),
           ),
           ListTile(
             leading: const Icon(Icons.keyboard),
-            title: const Text('Namen eintippen'),
-            subtitle: const Text('Liste mit Heldennamen schreiben oder einfügen'),
+            title: Text(tx('Namen eintippen', 'Type names')),
+            subtitle: Text(tx('Liste mit Heldennamen schreiben oder einfügen', 'Write or paste a list of hero names')),
             onTap: () => Navigator.pop(ctx, 1),
           ),
           ListTile(
             leading: const Icon(Icons.checklist),
-            title: const Text('Aus der Datenbank wählen'),
-            subtitle: const Text('Helden suchen und antippen'),
+            title: Text(tx('Aus der Datenbank wählen', 'Pick from database')),
+            subtitle: Text(tx('Helden suchen und antippen', 'Search heroes and tap them')),
             onTap: () => Navigator.pop(ctx, 2),
           ),
         ]),
@@ -68,7 +69,7 @@ class _SammlungSeiteState extends State<SammlungSeite> {
         if (liste != null && liste.isNotEmpty) {
           final n = await sammlung.hinzufuegen(liste);
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$n Helden hinzugefügt.')));
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tx('$n Helden hinzugefügt.', '$n heroes added.'))));
           }
         }
     }
@@ -80,7 +81,7 @@ class _SammlungSeiteState extends State<SammlungSeite> {
         await Clipboard.setData(ClipboardData(text: sammlung.exportieren()));
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Sammlung in die Zwischenablage kopiert (Sicherung).')),
+            SnackBar(content: Text(tx('Sammlung in die Zwischenablage kopiert (Sicherung).', 'Collection copied to clipboard (backup).'))),
           );
         }
       case 'import':
@@ -88,15 +89,15 @@ class _SammlungSeiteState extends State<SammlungSeite> {
         final text = await showDialog<String>(
           context: context,
           builder: (ctx) => AlertDialog(
-            title: const Text('Sicherung einfügen'),
+            title: Text(tx('Sicherung einfügen', 'Paste backup')),
             content: TextField(
               controller: ctrl,
               maxLines: 6,
               decoration: const InputDecoration(border: OutlineInputBorder(), hintText: '{"helden": [...]}'),
             ),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Abbrechen')),
-              FilledButton(onPressed: () => Navigator.pop(ctx, ctrl.text), child: const Text('Importieren')),
+              TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tx('Abbrechen', 'Cancel'))),
+              FilledButton(onPressed: () => Navigator.pop(ctx, ctrl.text), child: Text(tx('Importieren', 'Import'))),
             ],
           ),
         );
@@ -104,12 +105,12 @@ class _SammlungSeiteState extends State<SammlungSeite> {
         try {
           final n = await sammlung.importieren(text, ersetzen: true);
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$n Helden importiert.')));
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tx('$n Helden importiert.', '$n heroes imported.'))));
           }
         } catch (_) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Das ist keine gültige Sicherung.')),
+              SnackBar(content: Text(tx('Das ist keine gültige Sicherung.', 'That is not a valid backup.'))),
             );
           }
         }
@@ -117,11 +118,11 @@ class _SammlungSeiteState extends State<SammlungSeite> {
         final ok = await showDialog<bool>(
           context: context,
           builder: (ctx) => AlertDialog(
-            title: const Text('Alle Helden entfernen?'),
-            content: const Text('Tipp: Vorher über „Sicherung kopieren“ sichern.'),
+            title: Text(tx('Alle Helden entfernen?', 'Remove all heroes?')),
+            content: Text(tx('Tipp: Vorher über „Sicherung kopieren“ sichern.', 'Tip: back up first via "Copy backup".')),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Abbrechen')),
-              FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Alles löschen')),
+              TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(tx('Abbrechen', 'Cancel'))),
+              FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(tx('Alles löschen', 'Delete all'))),
             ],
           ),
         );
@@ -139,14 +140,14 @@ class _SammlungSeiteState extends State<SammlungSeite> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Meine Helden'),
+        title: Text(tx('Meine Helden', 'My heroes')),
         actions: [
           PopupMenuButton<String>(
             onSelected: (a) => _menue(a, sammlung),
-            itemBuilder: (_) => const [
-              PopupMenuItem(value: 'export', child: Text('Sicherung kopieren')),
-              PopupMenuItem(value: 'import', child: Text('Sicherung einfügen')),
-              PopupMenuItem(value: 'leeren', child: Text('Alles löschen')),
+            itemBuilder: (_) => [
+              PopupMenuItem(value: 'export', child: Text(tx('Sicherung kopieren', 'Copy backup'))),
+              PopupMenuItem(value: 'import', child: Text(tx('Sicherung einfügen', 'Paste backup'))),
+              PopupMenuItem(value: 'leeren', child: Text(tx('Alles löschen', 'Delete all'))),
             ],
           ),
         ],
@@ -154,7 +155,7 @@ class _SammlungSeiteState extends State<SammlungSeite> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _hinzufuegenMenue,
         icon: const Icon(Icons.add),
-        label: const Text('Helden hinzufügen'),
+        label: Text(tx('Helden hinzufügen', 'Add heroes')),
       ),
       body: eintraege.isEmpty
           ? _leer(t)
@@ -166,9 +167,9 @@ class _SammlungSeiteState extends State<SammlungSeite> {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
                   child: TextField(
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       prefixIcon: Icon(Icons.search),
-                      hintText: 'In meinen Helden suchen …',
+                      hintText: tx('In meinen Helden suchen …', 'Search my heroes …'),
                       border: OutlineInputBorder(),
                       isDense: true,
                     ),
@@ -205,30 +206,30 @@ class _SammlungSeiteState extends State<SammlungSeite> {
         children: [
           Icon(Icons.inventory_2_outlined, size: 72, color: t.colorScheme.primary),
           const SizedBox(height: 12),
-          Text('Noch keine Helden gespeichert', textAlign: TextAlign.center, style: t.textTheme.titleLarge),
+          Text(tx('Noch keine Helden gespeichert', 'No heroes saved yet'), textAlign: TextAlign.center, style: t.textTheme.titleLarge),
           const SizedBox(height: 8),
-          const Text(
-            'Trag deine Helden ein, dann zeigt dir die App, wogegen deine Sammlung gewappnet ist '
-            'und welche Helden dir noch fehlen.',
+          Text(
+            tx('Trag deine Helden ein, dann zeigt dir die App, wogegen deine Sammlung gewappnet ist und welche Helden dir noch fehlen.',
+                'Add your heroes and the app shows what your collection is prepared for and which heroes you are missing.'),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 24),
           FilledButton.icon(
             onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => EingabeScreenshot(db: widget.db))),
             icon: const Icon(Icons.photo_library),
-            label: const Text('Screenshots einlesen'),
+            label: Text(tx('Screenshots einlesen', 'Read screenshots')),
           ),
           const SizedBox(height: 8),
           OutlinedButton.icon(
             onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => EingabeText(db: widget.db))),
             icon: const Icon(Icons.keyboard),
-            label: const Text('Namen eintippen'),
+            label: Text(tx('Namen eintippen', 'Type names')),
           ),
           const SizedBox(height: 8),
           OutlinedButton.icon(
             onPressed: _hinzufuegenMenue,
             icon: const Icon(Icons.checklist),
-            label: const Text('Aus der Datenbank wählen'),
+            label: Text(tx('Aus der Datenbank wählen', 'Pick from database')),
           ),
         ],
       );
@@ -242,7 +243,7 @@ class _SammlungSeiteState extends State<SammlungSeite> {
       sterne[e.key.sterne] = (sterne[e.key.sterne] ?? 0) + e.value.anzahl;
       gesamt += e.value.anzahl;
     }
-    return Abschnitt('$gesamt Helden (${eintraege.length} verschiedene)', icon: Icons.inventory_2, kinder: [
+    return Abschnitt(tx('$gesamt Helden (${eintraege.length} verschiedene)', '$gesamt heroes (${eintraege.length} different)'), icon: Icons.inventory_2, kinder: [
       Wrap(spacing: 6, runSpacing: 4, children: [
         for (final s in [5, 4, 3, 2, 1])
           if (sterne[s] != null) Chip(label: Text('$s★: ${sterne[s]}'), visualDensity: VisualDensity.compact),
@@ -253,7 +254,7 @@ class _SammlungSeiteState extends State<SammlungSeite> {
           if (farben[f] != null)
             Chip(
               avatar: CircleAvatar(backgroundColor: elementFarben[f], radius: 7),
-              label: Text('${elementNamen[f]}: ${farben[f]}'),
+              label: Text('${elementName(f)}: ${farben[f]}'),
               visualDensity: VisualDensity.compact,
             ),
       ]),
@@ -266,9 +267,9 @@ class _SammlungSeiteState extends State<SammlungSeite> {
       margin: const EdgeInsets.fromLTRB(12, 6, 12, 6),
       child: ExpansionTile(
         leading: const Icon(Icons.radar),
-        title: const Text('Sammlungs-Check'),
+        title: Text(tx('Sammlungs-Check', 'Collection check')),
         subtitle: Text(
-          '${punkte.where((p) => p.hart.isEmpty).length} Bedrohungen ohne echten Konter',
+          tx('${punkte.where((p) => p.hart.isEmpty).length} Bedrohungen ohne echten Konter', '${punkte.where((p) => p.hart.isEmpty).length} threats without a real counter'),
           style: t.textTheme.bodySmall,
         ),
         childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
@@ -287,10 +288,10 @@ class _SammlungSeiteState extends State<SammlungSeite> {
               title: Text(widget.db.bedrohungName(p.bedrohung)),
               subtitle: Text(
                 p.hart.isNotEmpty
-                    ? p.hart.take(4).map((h) => h.name).join(', ')
+                    ? p.hart.take(4).map((h) => h.nameL).join(', ')
                     : (p.weich.isNotEmpty
-                        ? 'Nur abgefedert: ${p.weich.take(3).map((h) => h.name).join(', ')}'
-                        : 'Keiner deiner Helden kontert das'),
+                        ? '${tx('Nur abgefedert', 'Only softened')}: ${p.weich.take(3).map((h) => h.nameL).join(', ')}'
+                        : tx('Keiner deiner Helden kontert das', 'None of your heroes counters this')),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -323,13 +324,13 @@ class _KonterListe extends StatelessWidget {
           Padding(padding: const EdgeInsets.all(16), child: Text(b.tipp)),
         if (punkt.hart.isNotEmpty) Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-          child: Text('Kontern wirklich', style: t.textTheme.titleSmall),
+          child: Text(tx('Kontern wirklich', 'Real counters'), style: t.textTheme.titleSmall),
         ),
         for (final h in punkt.hart)
           HeldKachel(h, onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => HeldDetail(db: db, held: h)))),
         if (punkt.weich.isNotEmpty) Padding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-          child: Text('Federn nur ab', style: t.textTheme.titleSmall),
+          child: Text(tx('Federn nur ab', 'Only soften'), style: t.textTheme.titleSmall),
         ),
         for (final h in punkt.weich)
           HeldKachel(h, onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => HeldDetail(db: db, held: h)))),
@@ -338,7 +339,7 @@ class _KonterListe extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             child: OutlinedButton.icon(
               icon: const Icon(Icons.search),
-              label: const Text('Welche Helden würden helfen?'),
+              label: Text(tx('Welche Helden würden helfen?', 'Which heroes would help?')),
               onPressed: () => Navigator.push(
                 context,
                 MaterialPageRoute(

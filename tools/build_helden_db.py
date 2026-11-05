@@ -117,6 +117,9 @@ def main():
     skills_en = lade(f"{hp}/data/heroes_skills_en.json")
     typen = lade(f"{hp}/data/heroes_skill_types.json")
     L = lambda n: lade(f"{hp}/langs_json/{n}_de.json")  # noqa: E731
+    LE = lambda n: lade(f"{hp}/langs_json/{n}_en.json")  # noqa: E731
+    fancy_en, klassen_en, familien_en = LE("heroes_name_fancy"), LE("class"), LE("family")
+    tempo_en, aether_en, skill_namen_en = LE("speed"), LE("aether_power"), LE("skill_name")
     namen, fancy = L("heroes_name"), L("heroes_name_fancy")
     namen_en = lade(f"{hp}/langs_json/heroes_name_en.json")
     klassen, familien, tempo, aether = L("class"), L("family"), L("speed"), L("aether_power")
@@ -185,13 +188,17 @@ def main():
                 continue
             pids.append(pid)
             if pid not in passive_tab:
+                p_en = next((q for q in (sk_en.get("passiveSkills") or []) if q.get("id") == pid), {})
                 passive_tab[pid] = {"t": (p.get("title") or "").replace("\n", " ").replace("- ", ""),
-                                    "x": p.get("text") or ""}
+                                    "x": p.get("text") or "",
+                                    "te": (p_en.get("title") or "").replace("\n", " ").replace("- ", ""),
+                                    "xe": p_en.get("text") or ""}
 
         # Familie (Bonus-Text einmal pro Familie)
         fam = c.get("family") or ""
         if fam and fam not in familien_tab:
-            familien_tab[fam] = {"n": familien.get(fam, fam), "b": sk_de.get("familyBonus") or []}
+            familien_tab[fam] = {"n": familien.get(fam, fam), "b": sk_de.get("familyBonus") or [],
+                                 "ne": familien_en.get(fam, fam), "be": sk_en.get("familyBonus") or []}
 
         # Effekte aus HeroPlan-Kategorien
         fx = set()
@@ -248,6 +255,14 @@ def main():
             "p": pids,
             "fx": fx,
             "ae": aether.get(c.get("aetherGift") or "", ""),
+            # Englisch
+            "tie": fancy_en.get(hid) or (fancy_en.get(parent) if parent else "") or "",
+            "ke": klassen_en.get((c.get("classType") or "").lower(), c.get("classType") or ""),
+            "kk": (c.get("classType") or "").lower(),
+            "spe": tempo_en.get(c["manaSpeedId"], c["manaSpeedId"]),
+            "skne": skill_namen_en.get(c.get("specialId") or "", ""),
+            "ske": spezial_en.get("lines") or [],
+            "aee": aether_en.get(c.get("aetherGift") or "", ""),
         }
         if schutz:
             held["im"] = schutz
@@ -276,10 +291,18 @@ def main():
         "version": heute.strftime("%Y-%m-%d"),
         "quelle": "HeroPlan – heroplan.github.io (GPL-3.0), Daten aus den offiziellen Spieldateien",
         "autor": "FGSeRaser – github.com/FGSeRaser",
-        "effekte": {k: {"l": v[0], "g": v[1]} for k, v in W.EFFEKTE.items()},
-        "bedrohungen": W.BEDROHUNGEN,
+        "effekte": {k: {"l": v[0], "g": v[1], "le": W.EFFEKTE_EN[k]} for k, v in W.EFFEKTE.items()},
+        "bedrohungen": {k: {**v, "le": W.BEDROHUNGEN_EN[k][0], "te": W.BEDROHUNGEN_EN[k][1]}
+                        for k, v in W.BEDROHUNGEN.items()},
         "leidenBedrohungen": W.LEIDEN_BEDROHUNGEN,
-        "rollen": W.ROLLEN,
+        "rollen": {k: {**v, "le": W.ROLLEN_EN[k]} for k, v in W.ROLLEN.items()},
+        "truppen": {
+            "passive": {k: {"de": v[0], "en": v[1], "rollen": v[2]} for k, v in W.TRUPPEN_PASSIVE.items()},
+            "legendaer": [{"name": n, "k1": k1, "k2": k2, "p": p} for n, k1, k2, p in W.TRUPPEN_LEGENDAER],
+            "episch": W.TRUPPEN_EPISCH,
+            "manaSchwellen": W.MANA_SCHWELLEN,
+            "klassen": {k: {"de": klassen.get(k, k), "en": klassen_en.get(k, k)} for k in W.KLASSEN},
+        },
         "familien": familien_tab,
         "passive": passive_tab,
         "helden": helden,

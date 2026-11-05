@@ -35,10 +35,17 @@ Von **FGSeRaser** – [github.com/FGSeRaser](https://github.com/FGSeRaser)
 - Team-Check wählt aus deinen eigenen Helden
 - Sicherung kopieren/einfügen
 
+## Stand: Schicht 3 – Teams, Truppen, Sprachen
+
+- **Team-Builder**: beste Teams aus der eigenen Sammlung für Verteidigung (mit Aufstellung), Angriff, Krieg (6 Teams) und Titan (mit Farbvorteil)
+- **Gegner-Analyse**: Gegnerteam per Screenshot oder Auswahl → beste eigene Teams mit geschätzter Gewinnchance und Begründung
+- **Truppen**: alle Truppenarten, 20 legendäre Truppen mit Klassen/Passiv, Empfehlung je Held und Modus, Mana-Schwellen
+- **Deutsch / Englisch** umschaltbar (Oberfläche und alle Heldentexte)
+- Eigenes **App-Icon** (`tools/icon_bauen.py`)
+
 ## Geplant
 
-- **Schicht 2b:** automatische Teamvorschläge für Verteidigung, Angriff, Krieg, Titan aus deiner Sammlung
-- **Schicht 3:** Anbindung an den Discord-Allianz-Bot
+- **Schicht 4:** Anbindung an den Discord-Allianz-Bot
 
 ## APK bekommen
 

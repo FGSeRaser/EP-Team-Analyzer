@@ -6,46 +6,65 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
+import 'sprache.dart';
+
 class Effekt {
   final String key;
-  final String label;
+  final String labelDe;
   final String gruppe;
-  const Effekt(this.key, this.label, this.gruppe);
+  final String labelEn;
+  const Effekt(this.key, this.labelDe, this.gruppe, [this.labelEn = '']);
+  String get label => Sprache.en && labelEn.isNotEmpty ? labelEn : labelDe;
 }
 
 class Bedrohung {
   final String key;
-  final String label;
+  final String labelDe;
 
   /// Effekte, die die Bedrohung wirklich aushebeln
   final List<String> counters;
 
   /// Effekte, die sie nur abfedern
   final List<String> weich;
-  final String tipp;
-  const Bedrohung(this.key, this.label, this.counters, this.tipp, [this.weich = const []]);
+  final String tippDe;
+  final String labelEn;
+  final String tippEn;
+  const Bedrohung(this.key, this.labelDe, this.counters, this.tippDe,
+      [this.weich = const [], this.labelEn = '', this.tippEn = '']);
+  String get label => Sprache.en && labelEn.isNotEmpty ? labelEn : labelDe;
+  String get tipp => Sprache.en && tippEn.isNotEmpty ? tippEn : tippDe;
 }
 
 class Passiv {
   final String id;
-  final String titel;
-  final String text;
-  const Passiv(this.id, this.titel, this.text);
+  final String titelDe;
+  final String textDe;
+  final String titelEn;
+  final String textEn;
+  const Passiv(this.id, this.titelDe, this.textDe, [this.titelEn = '', this.textEn = '']);
+  String get titel => Sprache.en && titelEn.isNotEmpty ? titelEn : titelDe;
+  String get text => Sprache.en && textEn.isNotEmpty ? textEn : textDe;
 }
 
 class Familie {
   final String id;
-  final String name;
-  final List<String> bonus;
-  const Familie(this.id, this.name, this.bonus);
+  final String nameDe;
+  final List<String> bonusDe;
+  final String nameEn;
+  final List<String> bonusEn;
+  const Familie(this.id, this.nameDe, this.bonusDe, [this.nameEn = '', this.bonusEn = const []]);
+  String get name => Sprache.en && nameEn.isNotEmpty ? nameEn : nameDe;
+  List<String> get bonus => Sprache.en && bonusEn.isNotEmpty ? bonusEn : bonusDe;
 }
 
 class Rolle {
   final String key;
-  final String label;
+  final String labelDe;
   final Map<String, double> effekte;
   final Map<String, double> werte;
-  const Rolle(this.key, this.label, this.effekte, this.werte);
+  final String labelEn;
+  const Rolle(this.key, this.labelDe, this.effekte, this.werte, [this.labelEn = '']);
+  String get label => Sprache.en && labelEn.isNotEmpty ? labelEn : labelDe;
 }
 
 class Held {
@@ -81,6 +100,15 @@ class Held {
   /// Fähigkeit im Spiel noch ein Platzhalter (Held ohne Termin)
   final bool unvollstaendig;
   final String aether;
+
+  // Englisch
+  final String titelEn;
+  final String klasseEn;
+  final String klasseKey; // wizard, ranger, … (für Truppen)
+  final String tempoEn;
+  final String spezialNameEn;
+  final List<String> spezialEn;
+  final String aetherEn;
   final String _such;
 
   Held({
@@ -108,9 +136,30 @@ class Held {
     required this.kommend,
     this.unvollstaendig = false,
     required this.aether,
-  }) : _such = '$name $nameEn $titel $spezialName'.toLowerCase();
+    this.titelEn = '',
+    this.klasseEn = '',
+    this.klasseKey = '',
+    this.tempoEn = '',
+    this.spezialNameEn = '',
+    this.spezialEn = const [],
+    this.aetherEn = '',
+  }) : _such = '$name $nameEn $titel $titelEn $spezialName $spezialNameEn'.toLowerCase();
 
-  String get anzeigeName => kostuemTyp == null ? name : '$name ($kostuemTyp)';
+  // Anzeige in der eingestellten Sprache
+  String get nameL => Sprache.en && nameEn.isNotEmpty ? nameEn : name;
+  String get titelL => Sprache.en && titelEn.isNotEmpty ? titelEn : titel;
+  String get klasseL => Sprache.en && klasseEn.isNotEmpty ? klasseEn : klasse;
+  String get tempoL => Sprache.en && tempoEn.isNotEmpty ? tempoEn : tempo;
+  String get spezialNameL => Sprache.en && spezialNameEn.isNotEmpty ? spezialNameEn : spezialName;
+  List<String> get spezialL => Sprache.en && spezialEn.isNotEmpty ? spezialEn : spezial;
+  String get aetherL => Sprache.en && aetherEn.isNotEmpty ? aetherEn : aether;
+  String get kostuemL {
+    final k = kostuemTyp;
+    if (k == null || !Sprache.en) return k ?? '';
+    return const {'Glas': 'Glass', 'Stilvoll': 'Stylish', 'Kostüm': 'Costume'}[k] ?? k;
+  }
+
+  String get anzeigeName => kostuemTyp == null ? nameL : '$nameL ($kostuemL)';
   List<int> get maxWerte => werte[2];
   int get kraft => werte[2][3];
   int get angriff => werte[2][0];
@@ -153,6 +202,13 @@ class Held {
       kostuemTyp: j['ct'] as String?,
       kommend: j['neu'] == 1,
       unvollstaendig: j['uv'] == 1,
+      titelEn: (j['tie'] ?? '') as String,
+      klasseEn: (j['ke'] ?? '') as String,
+      klasseKey: (j['kk'] ?? '') as String,
+      tempoEn: (j['spe'] ?? '') as String,
+      spezialNameEn: (j['skne'] ?? '') as String,
+      spezialEn: List<String>.from(j['ske'] as List? ?? const []),
+      aetherEn: (j['aee'] ?? '') as String,
       aether: (j['ae'] ?? '') as String,
     );
   }
@@ -169,6 +225,7 @@ class Datenbank {
   final Map<String, Familie> familien;
   final List<Held> helden;
   final Map<String, Held> nachId;
+  final Map<String, dynamic> truppenRoh;
 
   Datenbank({
     required this.version,
@@ -180,6 +237,7 @@ class Datenbank {
     required this.passive,
     required this.familien,
     required this.helden,
+    this.truppenRoh = const {},
   }) : nachId = {for (final h in helden) h.id: h};
 
   static Future<Datenbank> laden() async {
@@ -189,6 +247,7 @@ class Datenbank {
 
   String effektName(String key) => effekte[key]?.label ?? key;
   String bedrohungName(String key) => bedrohungen[key]?.label ?? effektName(key);
+  String bedrohungTipp(String key) => bedrohungen[key]?.tipp ?? '';
 
   /// Alle Varianten eines Helden (Basis + Kostüme)
   List<Held> varianten(Held h) {
@@ -204,7 +263,7 @@ Datenbank _parsen(String text) {
   final effekte = <String, Effekt>{};
   (j['effekte'] as Map<String, dynamic>).forEach((k, v) {
     final m = v as Map<String, dynamic>;
-    effekte[k] = Effekt(k, m['l'] as String, m['g'] as String);
+    effekte[k] = Effekt(k, m['l'] as String, m['g'] as String, (m['le'] ?? '') as String);
   });
 
   final bedrohungen = <String, Bedrohung>{};
@@ -216,6 +275,8 @@ Datenbank _parsen(String text) {
       List<String>.from(m['counters'] as List),
       (m['tipp'] ?? '') as String,
       List<String>.from(m['weich'] as List? ?? const []),
+      (m['le'] ?? '') as String,
+      (m['te'] ?? '') as String,
     );
   });
 
@@ -224,19 +285,21 @@ Datenbank _parsen(String text) {
     final m = v as Map<String, dynamic>;
     Map<String, double> zahlen(dynamic x) =>
         (x as Map<String, dynamic>).map((a, b) => MapEntry(a, (b as num).toDouble()));
-    rollen[k] = Rolle(k, m['label'] as String, zahlen(m['effekte']), zahlen(m['werte']));
+    rollen[k] = Rolle(k, m['label'] as String, zahlen(m['effekte']), zahlen(m['werte']), (m['le'] ?? '') as String);
   });
 
   final passive = <String, Passiv>{};
   (j['passive'] as Map<String, dynamic>).forEach((k, v) {
     final m = v as Map<String, dynamic>;
-    passive[k] = Passiv(k, (m['t'] ?? '') as String, (m['x'] ?? '') as String);
+    passive[k] = Passiv(k, (m['t'] ?? '') as String, (m['x'] ?? '') as String, (m['te'] ?? '') as String,
+        (m['xe'] ?? '') as String);
   });
 
   final familien = <String, Familie>{};
   (j['familien'] as Map<String, dynamic>).forEach((k, v) {
     final m = v as Map<String, dynamic>;
-    familien[k] = Familie(k, (m['n'] ?? k) as String, List<String>.from(m['b'] as List? ?? const []));
+    familien[k] = Familie(k, (m['n'] ?? k) as String, List<String>.from(m['b'] as List? ?? const []),
+        (m['ne'] ?? '') as String, List<String>.from(m['be'] as List? ?? const []));
   });
 
   final helden = (j['helden'] as List)
@@ -253,5 +316,6 @@ Datenbank _parsen(String text) {
     passive: passive,
     familien: familien,
     helden: helden,
+    truppenRoh: (j['truppen'] as Map<String, dynamic>?) ?? const {},
   );
 }

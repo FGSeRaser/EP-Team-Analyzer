@@ -5,18 +5,21 @@ import 'package:flutter/material.dart';
 
 import '../daten/analyse.dart';
 import '../daten/datenbank.dart';
+import '../daten/sprache.dart';
+import '../daten/truppen.dart';
 import 'besitz_bearbeiten.dart';
 import 'helden_liste.dart';
 import 'sammlung_scope.dart';
 import 'widgets.dart';
 
-const Map<String, String> rollenKurz = {
-  'tank': 'Tank',
-  'flanke': 'Flanke',
-  'angreifer': 'Angreifer',
-  'heiler': 'Heiler',
-  'konter': 'Bannen/Kontrolle',
-};
+String rollenKurz(String k) => switch (k) {
+      'tank' => 'Tank',
+      'flanke' => tx('Flanke', 'Flank'),
+      'angreifer' => tx('Angreifer', 'Attacker'),
+      'heiler' => tx('Heiler', 'Healer'),
+      'konter' => tx('Bannen/Kontrolle', 'Dispel/control'),
+      _ => k,
+    };
 
 class HeldDetail extends StatelessWidget {
   final Datenbank db;
@@ -27,11 +30,7 @@ class HeldDetail extends StatelessWidget {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => HeldenListe(
-          db: db,
-          startEffekte: {key},
-          titel: db.effektName(key),
-        ),
+        builder: (_) => HeldenListe(db: db, startEffekte: {key}, titel: db.effektName(key)),
       ),
     );
   }
@@ -48,8 +47,11 @@ class HeldDetail extends StatelessWidget {
     final anfaellig = a.anfaelligFuer(held);
     final immun = a.immunitaeten(held);
     final rollen = a.rollenWerte(held);
+    final truppen = truppenVon(db);
+    final legTruppen = truppen.legendaerFuer(held, a);
+    final epTruppen = truppen.epischFuer(held);
+    final manaHinweis = truppen.manaHinweis(held);
 
-    // Effekte nach Gruppe sortieren
     final gruppen = <String, List<String>>{};
     for (final e in held.effekte) {
       final g = db.effekte[e]?.gruppe ?? 'sonstiges';
@@ -65,7 +67,9 @@ class HeldDetail extends StatelessWidget {
           : FloatingActionButton.extended(
               onPressed: () => besitzBearbeiten(context, db, held),
               icon: Icon(besitz == null ? Icons.add : Icons.edit),
-              label: Text(besitz == null ? 'Zur Sammlung' : 'In Sammlung: ${besitz.standText(held)}'),
+              label: Text(besitz == null
+                  ? tx('Zur Sammlung', 'Add to collection')
+                  : '${tx('In Sammlung', 'In collection')}: ${besitz.standText(held)}'),
             ),
       body: ListView(
         padding: const EdgeInsets.only(bottom: 96),
@@ -92,26 +96,28 @@ class HeldDetail extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(held.anzeigeName, style: t.textTheme.headlineSmall),
-                      if (held.titel.isNotEmpty)
-                        Text(held.titel, style: t.textTheme.bodyMedium?.copyWith(fontStyle: FontStyle.italic)),
+                      if (held.titelL.isNotEmpty)
+                        Text(held.titelL, style: t.textTheme.bodyMedium?.copyWith(fontStyle: FontStyle.italic)),
                       const SizedBox(height: 4),
                       Sterne(held.sterne, groesse: 18),
                       const SizedBox(height: 6),
                       Wrap(spacing: 10, runSpacing: 2, children: [
-                        _info(Icons.palette, elementNamen[held.element] ?? held.element),
-                        _info(Icons.school, held.klasse),
-                        _info(Icons.speed, held.tempo),
+                        _info(Icons.palette, elementName(held.element)),
+                        _info(Icons.school, held.klasseL),
+                        _info(Icons.speed, held.tempoL),
                         if (held.datum.isNotEmpty) _info(Icons.event, held.datum),
                       ]),
                       if (held.kommend)
                         Padding(
                           padding: const EdgeInsets.only(top: 6),
                           child: Text(
-                              held.datum.isEmpty ? 'Noch nicht erschienen (ohne Termin)' : 'Erscheint am ${held.datum}',
+                              held.datum.isEmpty
+                                  ? tx('Noch nicht erschienen (ohne Termin)', 'Not released yet (no date)')
+                                  : tx('Erscheint am ${held.datum}', 'Releases on ${held.datum}'),
                               style: TextStyle(color: t.colorScheme.tertiary)),
                         ),
                       if (held.unvollstaendig)
-                        Text('Fähigkeit im Spiel noch Platzhalter',
+                        Text(tx('Fähigkeit im Spiel noch Platzhalter', 'Skill is still a placeholder in the game'),
                             style: TextStyle(color: t.colorScheme.error)),
                     ],
                   ),
@@ -121,23 +127,24 @@ class HeldDetail extends StatelessWidget {
           ),
 
           // ---------- Werte ----------
-          Abschnitt('Werte', icon: Icons.bar_chart, kinder: [
+          Abschnitt(tx('Werte', 'Stats'), icon: Icons.bar_chart, kinder: [
             Table(
               columnWidths: const {0: FlexColumnWidth(1.2)},
               children: [
-                _zeile(t, ['', 'Angriff', 'Verteid.', 'Leben', 'Kraft'], kopf: true),
+                _zeile(t, ['', tx('Angriff', 'Attack'), tx('Verteid.', 'Defense'), tx('Leben', 'Health'), tx('Kraft', 'Power')],
+                    kopf: true),
                 _zeile(t, ['Max', ...held.werte[0].map((v) => '$v')]),
                 if (held.sterne >= 3) _zeile(t, ['LB1', ...held.werte[1].map((v) => '$v')]),
                 if (held.sterne >= 3) _zeile(t, ['LB2', ...held.werte[2].map((v) => '$v')]),
               ],
             ),
             const SizedBox(height: 6),
-            Text('Ohne Embleme und Kostümbonus.', style: t.textTheme.bodySmall),
+            Text(tx('Ohne Embleme und Kostümbonus.', 'Without emblems and costume bonus.'), style: t.textTheme.bodySmall),
           ]),
 
           // ---------- Spezialfähigkeit ----------
-          Abschnitt('Spezial: ${held.spezialName}', icon: Icons.auto_awesome, kinder: [
-            for (final z in held.spezial)
+          Abschnitt('${tx('Spezial', 'Special')}: ${held.spezialNameL}', icon: Icons.auto_awesome, kinder: [
+            for (final z in held.spezialL)
               Padding(
                 padding: const EdgeInsets.only(bottom: 6),
                 child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -149,7 +156,7 @@ class HeldDetail extends StatelessWidget {
 
           // ---------- Passive ----------
           if (held.passive.isNotEmpty)
-            Abschnitt('Passive Fähigkeiten', icon: Icons.all_inclusive, kinder: [
+            Abschnitt(tx('Passive Fähigkeiten', 'Passive skills'), icon: Icons.all_inclusive, kinder: [
               for (final pid in held.passive)
                 if (db.passive[pid] != null)
                   Padding(
@@ -161,9 +168,48 @@ class HeldDetail extends StatelessWidget {
                   ),
             ]),
 
+          // ---------- Truppen ----------
+          Abschnitt(tx('Passende Truppen', 'Best troops'), icon: Icons.shield, kinder: [
+            Text(tx('Immer eine Truppe der Farbe ${elementName(held.element)}.',
+                'Always a ${elementName(held.element)} troop.')),
+            const SizedBox(height: 8),
+            for (final m in epTruppen) ...[
+              Text(m.key, style: t.textTheme.titleSmall),
+              for (final (i, e) in m.value.indexed)
+                Padding(
+                  padding: const EdgeInsets.only(left: 4, top: 2, bottom: 2),
+                  child: Text.rich(TextSpan(children: [
+                    TextSpan(
+                        text: '${i + 1}. ${e.titel}',
+                        style: TextStyle(fontWeight: i == 0 ? FontWeight.bold : FontWeight.normal)),
+                    TextSpan(text: ' – ${e.grund}', style: t.textTheme.bodySmall),
+                  ])),
+                ),
+              const SizedBox(height: 6),
+            ],
+            if (legTruppen.isNotEmpty) ...[
+              Text(tx('Legendär (Klasse ${held.klasseL})', 'Legendary (class ${held.klasseL})'),
+                  style: t.textTheme.titleSmall),
+              for (final (i, e) in legTruppen.take(4).indexed)
+                Padding(
+                  padding: const EdgeInsets.only(left: 4, top: 2, bottom: 2),
+                  child: Text.rich(TextSpan(children: [
+                    TextSpan(
+                        text: '${i + 1}. ${e.titel}',
+                        style: TextStyle(fontWeight: i == 0 ? FontWeight.bold : FontWeight.normal)),
+                    TextSpan(text: ' – ${e.grund}', style: t.textTheme.bodySmall),
+                  ])),
+                ),
+            ],
+            if (manaHinweis != null) ...[
+              const SizedBox(height: 8),
+              Text(manaHinweis, style: t.textTheme.bodySmall),
+            ],
+          ]),
+
           // ---------- Effekte ----------
-          Abschnitt('Was er kann', icon: Icons.category, kinder: [
-            if (held.effekte.isEmpty) const Text('Keine Effekte erkannt.'),
+          Abschnitt(tx('Was er kann', 'What it does'), icon: Icons.category, kinder: [
+            if (held.effekte.isEmpty) Text(tx('Keine Effekte erkannt.', 'No effects detected.')),
             for (final g in gruppenNamen.keys)
               if (gruppen[g] != null)
                 Padding(
@@ -174,16 +220,17 @@ class HeldDetail extends StatelessWidget {
                   ]),
                 ),
             const SizedBox(height: 4),
-            Text('Tippe auf einen Effekt, um alle Helden damit zu sehen.', style: t.textTheme.bodySmall),
+            Text(tx('Tippe auf einen Effekt, um alle Helden damit zu sehen.', 'Tap an effect to see all heroes with it.'),
+                style: t.textTheme.bodySmall),
           ]),
 
           // ---------- Rollen ----------
-          Abschnitt('Eignung', icon: Icons.groups, kinder: [
+          Abschnitt(tx('Eignung', 'Suitability'), icon: Icons.groups, kinder: [
             for (final r in rollen.entries)
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Row(children: [
-                  SizedBox(width: 120, child: Text(rollenKurz[r.key] ?? r.key)),
+                  SizedBox(width: 120, child: Text(rollenKurz(r.key))),
                   Expanded(
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(6),
@@ -193,27 +240,26 @@ class HeldDetail extends StatelessWidget {
                   SizedBox(width: 40, child: Text('${r.value}', textAlign: TextAlign.end)),
                 ]),
               ),
-            Text('Grobe Einschätzung aus Effekten und Werten.', style: t.textTheme.bodySmall),
+            Text(tx('Grobe Einschätzung aus Effekten und Werten.', 'Rough estimate from effects and stats.'),
+                style: t.textTheme.bodySmall),
           ]),
 
-          // ---------- Hilft gegen ----------
           if (hilft.isNotEmpty)
-            Abschnitt('Hilft dem Team gegen', icon: Icons.verified_user, kinder: [
+            Abschnitt(tx('Hilft dem Team gegen', 'Helps the team against'), icon: Icons.verified_user, kinder: [
               Wrap(spacing: 6, runSpacing: 6, children: [
                 for (final b in hilft) EffektChip(db.bedrohungName(b), farbe: Colors.green),
               ]),
             ]),
 
           if (teilweise.isNotEmpty)
-            Abschnitt('Federt ab', icon: Icons.shield_outlined, kinder: [
+            Abschnitt(tx('Federt ab', 'Softens'), icon: Icons.shield_outlined, kinder: [
               Wrap(spacing: 6, runSpacing: 6, children: [
                 for (final b in teilweise) EffektChip(db.bedrohungName(b), farbe: Colors.amber),
               ]),
             ]),
 
-          // ---------- Immun ----------
           if (immun.isNotEmpty)
-            Abschnitt('Selbst geschützt gegen', icon: Icons.health_and_safety, kinder: [
+            Abschnitt(tx('Selbst geschützt gegen', 'Immune to'), icon: Icons.health_and_safety, kinder: [
               Wrap(spacing: 6, runSpacing: 6, children: [
                 for (final e in immun)
                   EffektChip(
@@ -225,9 +271,8 @@ class HeldDetail extends StatelessWidget {
               ]),
             ]),
 
-          // ---------- Anfällig ----------
           if (anfaellig.isNotEmpty)
-            Abschnitt('Wird ausgehebelt durch', icon: Icons.warning_amber, kinder: [
+            Abschnitt(tx('Wird ausgehebelt durch', 'Countered by'), icon: Icons.warning_amber, kinder: [
               for (final e in anfaellig.entries)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 8),
@@ -236,21 +281,21 @@ class HeldDetail extends StatelessWidget {
                     TextSpan(text: e.value.map(db.effektName).join(', ')),
                   ])),
                 ),
-              Text('Gegner mit diesen Effekten nehmen seinem Vorteil die Wirkung.', style: t.textTheme.bodySmall),
+              Text(tx('Gegner mit diesen Effekten nehmen seinem Vorteil die Wirkung.',
+                      'Enemies with these effects negate his advantage.'),
+                  style: t.textTheme.bodySmall),
             ]),
 
-          // ---------- Familie ----------
           if (familie != null && familie.bonus.isNotEmpty)
-            Abschnitt('Familie: ${familie.name}', icon: Icons.family_restroom, kinder: [
+            Abschnitt('${tx('Familie', 'Family')}: ${familie.name}', icon: Icons.family_restroom, kinder: [
               for (final z in familie.bonus) Text(_saeubern(z)),
             ]),
 
-          if (held.aether.isNotEmpty)
-            Abschnitt('Äther-Kraft', icon: Icons.bolt, kinder: [Text(held.aether)]),
+          if (held.aetherL.isNotEmpty)
+            Abschnitt(tx('Äther-Kraft', 'Aether power'), icon: Icons.bolt, kinder: [Text(held.aetherL)]),
 
-          // ---------- Varianten ----------
           if (varianten.isNotEmpty)
-            Abschnitt('Andere Varianten', icon: Icons.checkroom, kinder: [
+            Abschnitt(tx('Andere Varianten', 'Other variants'), icon: Icons.checkroom, kinder: [
               for (final v in varianten)
                 HeldKachel(
                   v,
@@ -275,12 +320,12 @@ class HeldDetail extends StatelessWidget {
 
   TableRow _zeile(ThemeData t, List<String> zellen, {bool kopf = false}) => TableRow(
         children: [
-          for (final z in zellen)
+          for (var i = 0; i < zellen.length; i++)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 4),
               child: Text(
-                z,
-                textAlign: z == zellen.first ? TextAlign.start : TextAlign.end,
+                zellen[i],
+                textAlign: i == 0 ? TextAlign.start : TextAlign.end,
                 style: kopf ? t.textTheme.labelMedium : t.textTheme.bodyMedium,
               ),
             ),

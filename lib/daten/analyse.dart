@@ -2,6 +2,21 @@
 // Autor: FGSeRaser – https://github.com/FGSeRaser
 
 import 'datenbank.dart';
+import 'sprache.dart';
+
+/// Anzeigename eines Grundbausteins (Schlüssel bleiben deutsch)
+String bausteinName(String k) => Sprache.en
+    ? const {
+          'Heilung': 'Healing',
+          'Reinigen': 'Cleanse',
+          'Bannen': 'Dispel',
+          'Flächenschaden': 'AoE damage',
+          'Verteidigung runter': 'Defense down',
+          'Angriff hoch': 'Attack up',
+          'Mana-Kontrolle': 'Mana control',
+        }[k] ??
+        k
+    : k;
 
 /// Bedrohungen, die beim Team-Check immer geprüft werden
 const List<String> wichtigeBedrohungen = [
@@ -152,24 +167,24 @@ class Analyse {
     final hinweise = <String>[];
     if (team.isNotEmpty) {
       if (!bausteine['Reinigen']!) {
-        hinweise.add('Kein Reinigen im Team – Mana-Verlangsamung und Schaden über Zeit treffen euch voll.');
+        hinweise.add(tx('Kein Reinigen im Team – Mana-Verlangsamung und Schaden über Zeit treffen euch voll.', 'No cleanse in the team – mana slow and damage over time hit you fully.'));
       }
       if (!bausteine['Bannen']!) {
-        hinweise.add('Kein Bannen – gegen Spott, Gegenangriff und Verteidigungsboni wird es schwer.');
+        hinweise.add(tx('Kein Bannen – gegen Spott, Gegenangriff und Verteidigungsboni wird es schwer.', 'No dispel – taunt, counterattack and defense buffs get tough.'));
       }
       if (!bausteine['Heilung']!) {
-        hinweise.add('Keine Heilung – bei langen Kämpfen (Titan, Krieg) fehlt Durchhaltevermögen.');
+        hinweise.add(tx('Keine Heilung – bei langen Kämpfen (Titan, Krieg) fehlt Durchhaltevermögen.', 'No healing – long fights (titan, war) lack staying power.'));
       }
       if (!bausteine['Verteidigung runter']! && team.length >= 3) {
-        hinweise.add('Kein Verteidigung-runter – für Titanen und Angriff ein großer Schadensverlust.');
+        hinweise.add(tx('Kein Verteidigung-runter – für Titanen und Angriff ein großer Schadensverlust.', 'No defense down – a big damage loss for titans and attack.'));
       }
       final langsam = team.where((h) => h.tempoId == 'slow' || h.tempoId == 'very_slow').length;
       if (langsam >= 3) {
-        hinweise.add('$langsam langsame Helden – im Angriff kommen die Fähigkeiten spät.');
+        hinweise.add(tx('$langsam langsame Helden – im Angriff kommen die Fähigkeiten spät.', '$langsam slow heroes – on offense the specials come late.'));
       }
       final doppelt = familien.entries.where((e) => e.value >= 2).map((e) => db.familien[e.key]?.name ?? e.key);
       for (final f in doppelt) {
-        hinweise.add('Familienbonus aktiv: $f');
+        hinweise.add(tx('Familienbonus aktiv: $f', 'Family bonus active: $f'));
       }
     }
 

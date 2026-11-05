@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../daten/datenbank.dart';
+import '../daten/sprache.dart';
 import '../daten/namen_suche.dart';
 import '../erkennung/erkennung.dart';
 import '../erkennung/kartentext.dart';
@@ -47,7 +48,7 @@ class _EingabeScreenshotState extends State<EingabeScreenshot> {
         a.texte = await texte;
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Bild nicht lesbar: $e')));
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tx('Bild nicht lesbar: $e', 'Image not readable: $e'))));
         }
       }
     }
@@ -101,7 +102,7 @@ class _EingabeScreenshotState extends State<EingabeScreenshot> {
           final text = kartenTextLesen(z, a.ergebnis!.raster, a.texte);
           final bestaetigt = _nachNamenSortieren(text.name, kand, werte);
           funde.add(Fund(
-            quelle: 'Bild ${i + 1}, Reihe ${z.zeile + 1}',
+            quelle: tx('Bild ${i + 1}, Reihe ${z.zeile + 1}', 'Image ${i + 1}, row ${z.zeile + 1}'),
             gruppe: i,
             bild: a.shot.anzeige,
             rect: Rect.fromLTRB(z.x0, z.y0, z.x1, z.y1),
@@ -118,7 +119,7 @@ class _EingabeScreenshotState extends State<EingabeScreenshot> {
       if (!mounted) return;
       if (funde.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Keine Helden erkannt – Raster anpassen?')),
+          SnackBar(content: Text(tx('Keine Helden erkannt – Raster anpassen?', 'No heroes recognized – adjust grid?'))),
         );
         return;
       }
@@ -128,7 +129,7 @@ class _EingabeScreenshotState extends State<EingabeScreenshot> {
           builder: (_) => BestaetigungSeite(
             db: widget.db,
             funde: funde,
-            titel: 'Erkannte Helden',
+            titel: tx('Erkannte Helden', 'Recognized heroes'),
             ausScreenshots: true,
           ),
         ),
@@ -174,7 +175,7 @@ class _EingabeScreenshotState extends State<EingabeScreenshot> {
     final gesamt = _aufnahmen.fold<int>(0, (a, b) => a + (b.ergebnis?.treffer.length ?? 0));
     final beschaeftigt = _laedt || _aufnahmen.any((a) => a.laeuft);
     return Scaffold(
-      appBar: AppBar(title: const Text('Screenshots einlesen')),
+      appBar: AppBar(title: Text(tx('Screenshots einlesen', 'Read screenshots'))),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(12, 12, 12, 100),
         children: [
@@ -182,13 +183,18 @@ class _EingabeScreenshotState extends State<EingabeScreenshot> {
             child: Padding(
               padding: const EdgeInsets.all(14),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('So geht\'s', style: t.textTheme.titleMedium),
+                Text(tx('So geht\'s', 'How it works'), style: t.textTheme.titleMedium),
                 const SizedBox(height: 6),
-                const Text('1. Im Spiel die Heldenliste öffnen (Helden → alle Helden).\n'
+                Text(tx('1. Im Spiel die Heldenliste öffnen (Helden → alle Helden).\n'
                     '2. Screenshot machen, ein Stück weiterscrollen, nächster Screenshot …\n'
                     '3. Hier alle Screenshots auf einmal auswählen.\n'
                     '4. Die App findet das Raster selbst. Passt es nicht, über „Raster anpassen“ nachjustieren.\n'
-                    '5. Ergebnis prüfen und übernehmen.'),
+                    '5. Ergebnis prüfen und übernehmen.',
+                    '1. Open the hero list in the game.\n'
+                    '2. Take a screenshot, scroll a bit, next screenshot …\n'
+                    '3. Select all screenshots here at once.\n'
+                    '4. The app finds the grid itself. If it is off, use "Adjust grid".\n'
+                    '5. Check the result and add.')),
               ]),
             ),
           ),
@@ -196,15 +202,15 @@ class _EingabeScreenshotState extends State<EingabeScreenshot> {
           FilledButton.icon(
             onPressed: beschaeftigt ? null : _waehlen,
             icon: const Icon(Icons.photo_library),
-            label: Text(_aufnahmen.isEmpty ? 'Screenshots auswählen' : 'Weitere Screenshots'),
+            label: Text(_aufnahmen.isEmpty ? tx('Screenshots auswählen', 'Select screenshots') : tx('Weitere Screenshots', 'More screenshots')),
           ),
           if (beschaeftigt)
-            const Padding(
+            Padding(
               padding: EdgeInsets.all(16),
               child: Center(child: Column(children: [
                 CircularProgressIndicator(),
                 SizedBox(height: 8),
-                Text('Erkenne Helden …'),
+                Text(tx('Erkenne Helden …', 'Recognizing heroes …')),
               ])),
             ),
           for (var i = 0; i < _aufnahmen.length; i++) _aufnahmeKarte(t, i, _aufnahmen[i]),
@@ -215,7 +221,7 @@ class _EingabeScreenshotState extends State<EingabeScreenshot> {
           : FloatingActionButton.extended(
               onPressed: _pruefen,
               icon: const Icon(Icons.fact_check),
-              label: Text('$gesamt Helden prüfen'),
+              label: Text(tx('$gesamt Helden prüfen', 'Check $gesamt heroes')),
             ),
     );
   }
@@ -230,16 +236,16 @@ class _EingabeScreenshotState extends State<EingabeScreenshot> {
           Row(children: [
             Expanded(
               child: Text(
-                'Bild ${i + 1}: ${a.laeuft ? 'wird erkannt …' : (a.fehler != null ? 'Fehler' : '${erg?.treffer.length ?? 0} Helden')}',
+                '${tx('Bild', 'Image')} ${i + 1}: ${a.laeuft ? tx('wird erkannt …', 'recognizing …') : (a.fehler != null ? tx('Fehler', 'Error') : tx('${erg?.treffer.length ?? 0} Helden', '${erg?.treffer.length ?? 0} heroes'))}',
                 style: t.textTheme.titleSmall,
               ),
             ),
             TextButton(
               onPressed: a.laeuft || erg == null ? null : () => _rasterAnpassen(a),
-              child: const Text('Raster anpassen'),
+              child: Text(tx('Raster anpassen', 'Adjust grid')),
             ),
             IconButton(
-              tooltip: 'Entfernen',
+              tooltip: tx('Entfernen', 'Remove'),
               icon: const Icon(Icons.close),
               onPressed: a.laeuft ? null : () => setState(() => _aufnahmen.removeAt(i)),
             ),
@@ -345,9 +351,9 @@ class _RasterEditorState extends State<RasterEditor> {
     final r = _r;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Raster anpassen'),
+        title: Text(tx('Raster anpassen', 'Adjust grid')),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, _r), child: const Text('Übernehmen')),
+          TextButton(onPressed: () => Navigator.pop(context, _r), child: Text(tx('Übernehmen', 'Apply'))),
         ],
       ),
       body: Column(children: [
@@ -360,12 +366,12 @@ class _RasterEditorState extends State<RasterEditor> {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           child: Column(children: [
-            const Text('Die Kästchen sollen genau auf den Gesichtern der Helden liegen.'),
-            _regler('Abstand waagrecht', r.dx, w / 10, w / 2, (v) => _r = r.kopie(dx: v)),
-            _regler('Abstand senkrecht', r.dy, h / 20, h / 2, (v) => _r = r.kopie(dy: v)),
-            _regler('Größe', r.pw, r.dx * 0.4, r.dx, (v) => _r = r.kopie(pw: v)),
-            _regler('Links', r.x0, 0, w, (v) => _r = r.kopie(x0: v)),
-            _regler('Oben', r.y0, 0, h, (v) => _r = r.kopie(y0: v)),
+            Text(tx('Die Kästchen sollen genau auf den Gesichtern der Helden liegen.', 'The boxes should sit exactly on the hero faces.')),
+            _regler(tx('Abstand waagrecht', 'Horizontal spacing'), r.dx, w / 10, w / 2, (v) => _r = r.kopie(dx: v)),
+            _regler(tx('Abstand senkrecht', 'Vertical spacing'), r.dy, h / 20, h / 2, (v) => _r = r.kopie(dy: v)),
+            _regler(tx('Größe', 'Size'), r.pw, r.dx * 0.4, r.dx, (v) => _r = r.kopie(pw: v)),
+            _regler(tx('Links', 'Left'), r.x0, 0, w, (v) => _r = r.kopie(x0: v)),
+            _regler(tx('Oben', 'Top'), r.y0, 0, h, (v) => _r = r.kopie(y0: v)),
           ]),
         ),
       ]),

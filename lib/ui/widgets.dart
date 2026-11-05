@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 
 import '../daten/datenbank.dart';
+import '../daten/sprache.dart';
 
 const Map<String, Color> elementFarben = {
   'rot': Color(0xFFE53935),
@@ -20,6 +21,31 @@ const Map<String, String> elementNamen = {
   'gelb': 'Heilig',
   'lila': 'Finster',
 };
+
+const Map<String, String> elementNamenEn = {
+  'rot': 'Fire',
+  'blau': 'Ice',
+  'gruen': 'Nature',
+  'gelb': 'Holy',
+  'lila': 'Dark',
+};
+
+String elementName(String e) => (Sprache.en ? elementNamenEn[e] : elementNamen[e]) ?? e;
+
+const Map<String, String> gruppenNamenEn = {
+  'angriff': 'Attack',
+  'schaden': 'Damage over time',
+  'schwaechung': 'Debuffs',
+  'kontrolle': 'Control & dispel',
+  'mana': 'Mana',
+  'heilung': 'Healing',
+  'schutz': 'Protection',
+  'reinigung': 'Cleanse & ailment defense',
+  'beschwoerung': 'Summons',
+  'sonstiges': 'Other',
+};
+
+String gruppenName(String g) => (Sprache.en ? gruppenNamenEn[g] : gruppenNamen[g]) ?? g;
 
 const Map<String, String> gruppenNamen = {
   'angriff': 'Angriff',
@@ -167,14 +193,14 @@ class HeldKachel extends StatelessWidget {
         if (held.kommend)
           Padding(
             padding: const EdgeInsets.only(left: 6),
-            child: Text('bald', style: t.textTheme.labelSmall?.copyWith(color: t.colorScheme.tertiary)),
+            child: Text(tx('bald', 'soon'), style: t.textTheme.labelSmall?.copyWith(color: t.colorScheme.tertiary)),
           ),
       ]),
       subtitle: Row(children: [
         Sterne(held.sterne, groesse: 12),
         const SizedBox(width: 6),
         Flexible(
-          child: Text('${held.klasse} · ${held.tempo}',
+          child: Text('${held.klasseL} · ${held.tempoL}',
               overflow: TextOverflow.ellipsis, style: t.textTheme.bodySmall),
         ),
       ]),

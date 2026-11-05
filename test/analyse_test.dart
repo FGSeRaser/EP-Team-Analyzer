@@ -10,6 +10,8 @@ import 'package:ep_team_analyzer/daten/namen_suche.dart';
 import 'package:ep_team_analyzer/daten/werte.dart';
 import 'package:ep_team_analyzer/erkennung/erkennung.dart';
 import 'package:ep_team_analyzer/erkennung/kartentext.dart';
+import 'package:ep_team_analyzer/daten/team_builder.dart';
+import 'package:ep_team_analyzer/daten/truppen.dart';
 
 Datenbank _lade() {
   final j = jsonDecode(File('assets/data/helden.json').readAsStringSync()) as Map<String, dynamic>;
@@ -34,6 +36,7 @@ Datenbank _lade() {
     passive: const {},
     familien: const {},
     helden: helden,
+    truppenRoh: (j['truppen'] as Map<String, dynamic>?) ?? const {},
   );
 }
 
@@ -115,5 +118,42 @@ void main() {
     expect(standAusLevel(5, 80), (stufe: 4, level: 80, lb: 0));
     expect(standAusLevel(5, 70), (stufe: 3, level: 70, lb: 0));
     expect(standAusLevel(4, 75), (stufe: 4, level: 75, lb: 1));
+  });
+
+  test('Team-Builder baut gültige Teams aus einer Sammlung', () {
+    final pool = db.helden.where((h) => !h.kommend && h.sterne == 5 && h.kostuemVon == null).take(60).toList();
+    final b = TeamBuilder(Analyse(db));
+    for (final m in [Modus.verteidigung, Modus.angriff, Modus.titan]) {
+      final v = b.baue(pool, m, titanFarbe: 'rot');
+      expect(v, isNotEmpty);
+      expect(v.first.helden.length, 5);
+      expect(v.first.helden.map((h) => h.basisId).toSet().length, 5);
+    }
+    final krieg = b.krieg(pool);
+    expect(krieg.length, 6);
+    final alle = krieg.expand((t) => t.helden.map((h) => h.basisId)).toList();
+    expect(alle.toSet().length, alle.length); // jeder Held nur einmal
+  });
+
+  test('Gegner-Analyse: Chance zwischen 3 und 97 %, Farbvorteil zählt', () {
+    final pool = db.helden.where((h) => !h.kommend && h.sterne == 5 && h.kostuemVon == null).take(80).toList();
+    final gegner = pool.skip(60).take(5).toList();
+    final b = TeamBuilder(Analyse(db));
+    final v = b.baue(pool.take(60).toList(), Modus.gegner, gegner: gegner);
+    expect(v, isNotEmpty);
+    expect(v.first.chance, inInclusiveRange(3, 97));
+    expect(farbVorteil('rot', 'gruen'), 1);
+    expect(farbVorteil('gruen', 'rot'), -1);
+    expect(farbVorteil('gelb', 'lila'), 1);
+  });
+
+  test('Truppen: legendäre Truppe passt zur Klasse', () {
+    final w = truppenVon(db);
+    expect(w.legendaer.length, 20);
+    final edwin = db.nachId['halloween_edwin']!; // Paladin
+    final leg = w.legendaerFuer(edwin, Analyse(db));
+    expect(leg, isNotEmpty);
+    expect(leg.every((e) => e.legendaer!.klasse1 == 'paladin' || e.legendaer!.klasse2 == 'paladin'), isTrue);
+    expect(w.epischFuer(edwin).length, 3);
   });
 }

@@ -6,6 +6,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 
 import '../daten/datenbank.dart';
+import '../daten/sprache.dart';
 import '../daten/sammlung.dart';
 import 'helden_liste.dart';
 import 'sammlung_scope.dart';
@@ -52,7 +53,7 @@ class Fund {
     final t = <String>[];
     if (level != null) t.add('LVL $level');
     if (talent != null) t.add('Talent $talent');
-    if (staerke != null) t.add('Stärke $staerke');
+    if (staerke != null) t.add(tx('Stärke $staerke', 'Power $staerke'));
     return t.join(' · ');
   }
 
@@ -105,11 +106,11 @@ class BestaetigungSeite extends StatefulWidget {
   final List<Fund> funde;
   final String titel;
   final bool ausScreenshots;
-  const BestaetigungSeite({
+  BestaetigungSeite({
     super.key,
     required this.db,
     required this.funde,
-    this.titel = 'Helden prüfen',
+    this.titel = tx('Helden prüfen', 'Check heroes'),
     this.ausScreenshots = false,
   });
 
@@ -176,7 +177,7 @@ class _BestaetigungSeiteState extends State<BestaetigungSeite> {
     final n = await sammlung.hinzufuegenMitStand(liste, nurNeue: _nurNeue);
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$n Helden zur Sammlung hinzugefügt.')),
+      SnackBar(content: Text(tx('$n Helden zur Sammlung hinzugefügt.', '$n heroes added to the collection.'))),
     );
     Navigator.of(context).popUntil((r) => r.isFirst);
   }
@@ -195,21 +196,21 @@ class _BestaetigungSeiteState extends State<BestaetigungSeite> {
         padding: const EdgeInsets.only(bottom: 100),
         children: [
           SwitchListTile(
-            title: const Text('Schon vorhandene nicht doppelt zählen'),
-            subtitle: const Text('Helden, die bereits in deiner Sammlung sind, werden übersprungen.'),
+            title: Text(tx('Schon vorhandene nicht doppelt zählen', 'Don\'t count existing ones twice')),
+            subtitle: Text(tx('Helden, die bereits in deiner Sammlung sind, werden übersprungen.', 'Heroes already in your collection are skipped.')),
             value: _nurNeue,
             onChanged: (v) => setState(() => _nurNeue = v),
           ),
           if (widget.ausScreenshots)
             SwitchListTile(
-              title: const Text('Screenshots überlappen'),
-              subtitle: const Text('Gleicher Held mit gleicher Stärke auf mehreren Screenshots zählt nur einmal.'),
+              title: Text(tx('Screenshots überlappen', 'Screenshots overlap')),
+              subtitle: Text(tx('Gleicher Held mit gleicher Stärke auf mehreren Screenshots zählt nur einmal.', 'Same hero with the same power on several screenshots counts once.')),
               value: _ueberlappung,
               onChanged: (v) => setState(() => _ueberlappung = v),
             ),
           if (unsicher > 0)
             SwitchListTile(
-              title: Text('Nur unsichere zeigen ($unsicher)'),
+              title: Text(tx('Nur unsichere zeigen ($unsicher)', 'Show only uncertain ($unsicher)')),
               value: _nurUnsichere,
               onChanged: (v) => setState(() => _nurUnsichere = v),
             ),
@@ -220,7 +221,7 @@ class _BestaetigungSeiteState extends State<BestaetigungSeite> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: anzahl == 0 ? null : _uebernehmen,
         icon: const Icon(Icons.check),
-        label: Text('$anzahl übernehmen'),
+        label: Text(tx('$anzahl übernehmen', 'Add $anzahl')),
       ),
     );
   }
@@ -250,7 +251,7 @@ class _BestaetigungSeiteState extends State<BestaetigungSeite> {
                   Row(children: [
                     Expanded(
                       child: Text(
-                        g == null ? 'Nicht gefunden' : g.anzeigeName,
+                        g == null ? tx('Nicht gefunden', 'Not found') : g.anzeigeName,
                         style: t.textTheme.titleMedium,
                       ),
                     ),
@@ -260,21 +261,21 @@ class _BestaetigungSeiteState extends State<BestaetigungSeite> {
                     Row(children: [
                       Sterne(g.sterne, groesse: 12),
                       const SizedBox(width: 6),
-                      Text(elementNamen[g.element] ?? '', style: t.textTheme.bodySmall),
+                      Text(elementName(g.element), style: t.textTheme.bodySmall),
                       if (f.anzahl > 1) Text('  ×${f.anzahl}', style: t.textTheme.bodySmall),
                       if (vorhanden)
-                        Text('  · schon in Sammlung', style: t.textTheme.bodySmall?.copyWith(color: t.colorScheme.tertiary)),
+                        Text(tx('  · schon in Sammlung', '  · already in collection'), style: t.textTheme.bodySmall?.copyWith(color: t.colorScheme.tertiary)),
                     ]),
                   if (f.standText.isNotEmpty || f.textName != null)
                     Text(
                       [
-                        if (f.textName != null) 'gelesen: „${f.textName}“${f.nameBestaetigt ? ' ✓' : ''}',
+                        if (f.textName != null) '${tx('gelesen', 'read')}: „${f.textName}“${f.nameBestaetigt ? ' ✓' : ''}',
                         if (f.standText.isNotEmpty) f.standText,
                       ].join(' · '),
                       style: t.textTheme.bodySmall,
                     ),
                   if (f.unsicher && g != null)
-                    Text('Unsicher – bitte prüfen', style: t.textTheme.bodySmall?.copyWith(color: Colors.orange)),
+                    Text(tx('Unsicher – bitte prüfen', 'Uncertain – please check'), style: t.textTheme.bodySmall?.copyWith(color: Colors.orange)),
                   const SizedBox(height: 6),
                   Wrap(spacing: 6, runSpacing: 6, children: [
                     for (var i = 0; i < f.kandidaten.length && i < 5; i++)
@@ -293,7 +294,7 @@ class _BestaetigungSeiteState extends State<BestaetigungSeite> {
                       ),
                     ActionChip(
                       avatar: const Icon(Icons.search, size: 18),
-                      label: const Text('Anderer …'),
+                      label: Text(tx('Anderer …', 'Other …')),
                       onPressed: () => _anderen(f),
                     ),
                   ]),

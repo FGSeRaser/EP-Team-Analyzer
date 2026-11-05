@@ -102,7 +102,7 @@ Der Bau startet **automatisch nach jedem Hochladen**.
 
 ## 6. Die App benutzen
 
-Unten gibt es fünf Bereiche:
+Unten gibt es fünf Bereiche: **Helden, Meine, Teams, Wissen, Info**.
 
 ### 👥 Helden
 Alle Helden des Spiels mit Werten, Fähigkeiten und Passiven auf Deutsch.
@@ -146,17 +146,36 @@ oder ihn zu entfernen.
 - 🟢 grün = gut abgedeckt
 Antippen zeigt die Helden – und wenn dir etwas fehlt, welche Helden helfen würden.
 
-### 🛡️ Team
-Team-Check: 5 Plätze antippen und Helden wählen (es werden zuerst **deine** Helden gezeigt).
-Du siehst Grundbausteine (Heilung, Reinigen, Bannen …), Hinweise, wogegen das Team gewappnet ist und wo es schwach ist.
-Gedrückt halten auf einen Helden = Details.
+### 🛡️ Teams
+Drei Werkzeuge:
 
-### 📖 Effekte
-- **Konter-Tabelle**: Gegner hat X → diese Effekte helfen (grün = echter Konter, gelb = federt nur ab)
-- **Alle Effekte**: Liste mit Anzahl der Helden
+**Team-Builder** – baut aus *deinen* Helden die besten 5er-Teams:
+1. Modus wählen: **Verteidigung**, **Angriff / Raid**, **Krieg (6 Teams)** oder **Titan**
+2. Bei Titan die **Farbe des Titanen** wählen (die App nimmt dann Helden mit Farbvorteil)
+3. **„Teams bauen“** – du bekommst das beste Team plus Alternativen mit Stärken (✔) und Schwächen (⚠)
+4. Bei Verteidigung steht die **Aufstellung** dabei (Flanke, Flügel, Tank in der Mitte …)
+5. Bei Krieg: 6 Teams, jeder Held nur einmal
+
+**Gegner-Analyse** – „Mit welchen Helden schlage ich dieses Team?“
+1. **„Screenshot vom Gegnerteam“** (z. B. vom Raid oder aus dem Krieg) – oder die 5 Plätze antippen und Helden wählen
+2. Prüfen, ob alle 5 stimmen (antippen = ändern). Mitte = Tank
+3. **„Beste Teams gegen diesen Gegner“** – die App zeigt deine besten Teams mit **geschätzter Gewinnchance in %**
+   und erklärt warum (Farbvorteil gegen den Tank, welche Gegner-Effekte du konterst, wo du keine Antwort hast)
+
+> Die Prozentzahl ist eine **Schätzung** (Stärke, Farben, Konter, Heilung) – kein Kampfsimulator.
+> Steinglück und Truppen/Embleme des Gegners kann die App nicht kennen.
+
+**Team-Check** – 5 Helden selbst wählen und Stärken/Lücken sehen (auch aus dem Builder heraus: „Im Team-Check öffnen“).
+
+### 📖 Wissen
+- **Effekte & Konter**: Konter-Tabelle und alle Effekte mit Anzahl Helden
+- **Truppen**: alle Truppenarten (Mana, Krit, Magie, Styx, Ninja) mit Stufen, alle 20 legendären Truppen nach Klasse
+
+Auf jeder **Heldenseite** steht jetzt auch **„Passende Truppen“**: welche epische Truppe für Angriff/Krieg,
+Verteidigung und Titan, welche legendären Truppen zur Klasse passen und ab wie viel Mana-Bonus der Held einen Stein schneller ist.
 
 ### ℹ️ Info
-Stand der Datenbank, Datenquelle, Link zu deinem GitHub.
+**Sprache umschalten (Deutsch / English)**, Stand der Datenbank, Datenquelle, Link zu deinem GitHub.
 
 ## 7. Helden per Screenshot einlesen
 

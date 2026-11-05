@@ -4,20 +4,21 @@
 import 'package:flutter/material.dart';
 
 import '../daten/datenbank.dart';
+import '../daten/sprache.dart';
 import 'held_detail.dart';
 import 'sammlung_scope.dart';
 import 'widgets.dart';
 
 enum Sortierung { kraft, name, datum, angriff, verteidigung, leben }
 
-const Map<Sortierung, String> sortierNamen = {
-  Sortierung.kraft: 'Kraft',
-  Sortierung.name: 'Name',
-  Sortierung.datum: 'Neueste',
-  Sortierung.angriff: 'Angriff',
-  Sortierung.verteidigung: 'Verteidigung',
-  Sortierung.leben: 'Leben',
-};
+String sortierName(Sortierung s) => switch (s) {
+      Sortierung.kraft => tx('Kraft', 'Power'),
+      Sortierung.name => 'Name',
+      Sortierung.datum => tx('Neueste', 'Newest'),
+      Sortierung.angriff => tx('Angriff', 'Attack'),
+      Sortierung.verteidigung => tx('Verteidigung', 'Defense'),
+      Sortierung.leben => tx('Leben', 'Health'),
+    };
 
 class HeldenListe extends StatefulWidget {
   final Datenbank db;
@@ -124,14 +125,14 @@ class _HeldenListeState extends State<HeldenListe> {
               children: [
                 Row(children: [
                   Expanded(
-                    child: Text('Effekte filtern', style: Theme.of(ctx).textTheme.titleLarge),
+                    child: Text(tx('Effekte filtern', 'Filter effects'), style: Theme.of(ctx).textTheme.titleLarge),
                   ),
                   TextButton(
                     onPressed: () => setSheet(auswahl.clear),
-                    child: const Text('Zurücksetzen'),
+                    child: Text(tx('Zurücksetzen', 'Reset')),
                   ),
                 ]),
-                const Text('Held muss ALLE gewählten Effekte haben.'),
+                Text(tx('Held muss ALLE gewählten Effekte haben.', 'Hero must have ALL selected effects.')),
                 for (final g in gruppenNamen.keys)
                   if (gruppen[g] != null) ...[
                     Padding(
@@ -139,7 +140,7 @@ class _HeldenListeState extends State<HeldenListe> {
                       child: Row(children: [
                         Icon(gruppenIcons[g], size: 18),
                         const SizedBox(width: 6),
-                        Text(gruppenNamen[g]!, style: Theme.of(ctx).textTheme.titleSmall),
+                        Text(gruppenName(g), style: Theme.of(ctx).textTheme.titleSmall),
                       ]),
                     ),
                     Wrap(
@@ -164,7 +165,7 @@ class _HeldenListeState extends State<HeldenListe> {
                 const SizedBox(height: 16),
                 FilledButton(
                   onPressed: () => Navigator.pop(ctx),
-                  child: const Text('Übernehmen'),
+                  child: Text(tx('Übernehmen', 'Apply')),
                 ),
               ],
             ),
@@ -183,21 +184,21 @@ class _HeldenListeState extends State<HeldenListe> {
     final t = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.titel ?? (_waehlt ? 'Helden auswählen' : 'Helden-Datenbank')),
+        title: Text(widget.titel ?? (_waehlt ? tx('Helden auswählen', 'Pick heroes') : tx('Helden-Datenbank', 'Hero database'))),
         actions: [
           if (widget.mehrfach)
             TextButton(
               onPressed: _markiert.isEmpty ? null : () => Navigator.pop(context, List<Held>.from(_markiert)),
-              child: Text('Fertig (${_markiert.length})'),
+              child: Text(tx('Fertig (${_markiert.length})', 'Done (${_markiert.length})')),
             ),
           PopupMenuButton<Sortierung>(
             icon: const Icon(Icons.sort),
-            tooltip: 'Sortieren',
+            tooltip: tx('Sortieren', 'Sort'),
             initialValue: _sort,
             onSelected: (s) => setState(() => _sort = s),
             itemBuilder: (_) => [
               for (final s in Sortierung.values)
-                PopupMenuItem(value: s, child: Text('Nach ${sortierNamen[s]}')),
+                PopupMenuItem(value: s, child: Text(tx('Nach ${sortierName(s)}', 'By ${sortierName(s)}'))),
             ],
           ),
         ],
@@ -210,7 +211,7 @@ class _HeldenListeState extends State<HeldenListe> {
               controller: _suche,
               decoration: InputDecoration(
                 prefixIcon: const Icon(Icons.search),
-                hintText: 'Name, Titel oder Fähigkeit suchen …',
+                hintText: tx('Name, Titel oder Fähigkeit suchen …', 'Search name, title or skill …'),
                 border: const OutlineInputBorder(),
                 isDense: true,
                 suffixIcon: _q.isEmpty
@@ -237,7 +238,7 @@ class _HeldenListeState extends State<HeldenListe> {
                     padding: const EdgeInsets.all(4),
                     child: FilterChip(
                       avatar: const Icon(Icons.inventory_2, size: 16),
-                      label: Text('Meine (${meine.length})'),
+                      label: Text(tx('Meine (${meine.length})', 'Mine (${meine.length})')),
                       selected: _nurMeine,
                       onSelected: (an) => setState(() => _nurMeine = an),
                     ),
@@ -256,7 +257,7 @@ class _HeldenListeState extends State<HeldenListe> {
                     padding: const EdgeInsets.all(4),
                     child: FilterChip(
                       avatar: CircleAvatar(backgroundColor: elementFarben[f], radius: 7),
-                      label: Text(elementNamen[f]!),
+                      label: Text(elementName(f)),
                       selected: _farben.contains(f),
                       onSelected: (an) => setState(() => an ? _farben.add(f) : _farben.remove(f)),
                     ),
@@ -264,7 +265,7 @@ class _HeldenListeState extends State<HeldenListe> {
                 Padding(
                   padding: const EdgeInsets.all(4),
                   child: FilterChip(
-                    label: const Text('Kostüme'),
+                    label: Text(tx('Kostüme', 'Costumes')),
                     selected: _kostueme,
                     onSelected: (an) => setState(() => _kostueme = an),
                   ),
@@ -273,7 +274,7 @@ class _HeldenListeState extends State<HeldenListe> {
                   Padding(
                     padding: const EdgeInsets.all(4),
                     child: FilterChip(
-                      label: const Text('Kommende'),
+                      label: Text(tx('Kommende', 'Upcoming')),
                       selected: _kommende,
                       onSelected: (an) => setState(() => _kommende = an),
                     ),
@@ -286,12 +287,12 @@ class _HeldenListeState extends State<HeldenListe> {
             child: Row(children: [
               ActionChip(
                 avatar: const Icon(Icons.tune, size: 18),
-                label: Text(_effekte.isEmpty ? 'Effekte' : 'Effekte (${_effekte.length})'),
+                label: Text(_effekte.isEmpty ? tx('Effekte', 'Effects') : tx('Effekte (${_effekte.length})', 'Effects (${_effekte.length})')),
                 onPressed: _effektFilterWaehlen,
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: Text('${liste.length} Helden',
+                child: Text(tx('${liste.length} Helden', '${liste.length} heroes'),
                     textAlign: TextAlign.end, style: t.textTheme.bodySmall),
               ),
             ]),
@@ -317,7 +318,7 @@ class _HeldenListeState extends State<HeldenListe> {
           const Divider(height: 8),
           Expanded(
             child: liste.isEmpty
-                ? const Center(child: Text('Keine Helden gefunden.'))
+                ? Center(child: Text(tx('Keine Helden gefunden.', 'No heroes found.')))
                 : ListView.builder(
                     itemCount: liste.length,
                     itemBuilder: (ctx, i) {

@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 
 import '../daten/datenbank.dart';
+import '../daten/sprache.dart';
 import '../daten/sammlung.dart';
 import '../daten/werte.dart';
 import 'held_detail.dart';
@@ -96,7 +97,7 @@ class _BesitzSheetState extends State<_BesitzSheet> {
             ]),
             const SizedBox(height: 12),
             Row(children: [
-              const SizedBox(width: 110, child: Text('Anzahl')),
+              SizedBox(width: 110, child: Text(tx('Anzahl', 'Count'))),
               IconButton(
                 onPressed: _b.anzahl > 1 ? () => setState(() => _b.anzahl--) : null,
                 icon: const Icon(Icons.remove_circle_outline),
@@ -107,7 +108,7 @@ class _BesitzSheetState extends State<_BesitzSheet> {
                 icon: const Icon(Icons.add_circle_outline),
               ),
             ]),
-            const Text('Aufstiegsstufe'),
+            Text(tx('Aufstiegsstufe', 'Ascension')),
             const SizedBox(height: 4),
             SegmentedButton<int>(
               segments: [for (var s = 1; s <= stufen; s++) ButtonSegment(value: s, label: Text('$s'))],
@@ -123,7 +124,7 @@ class _BesitzSheetState extends State<_BesitzSheet> {
               const SizedBox(height: 4),
               SegmentedButton<int>(
                 segments: [
-                  for (var l = 0; l <= maxLb; l++) ButtonSegment(value: l, label: Text(l == 0 ? 'Keiner' : 'LB$l')),
+                  for (var l = 0; l <= maxLb; l++) ButtonSegment(value: l, label: Text(l == 0 ? tx('Keiner', 'None') : 'LB$l')),
                 ],
                 selected: {_b.lb},
                 onSelectionChanged: _b.stufe < stufen
@@ -168,18 +169,18 @@ class _BesitzSheetState extends State<_BesitzSheet> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _wert('Angriff', w.angriff),
-                    _wert('Verteid.', w.verteidigung),
-                    _wert('Leben', w.leben),
-                    _wert('Kraft', w.kraft),
+                    _wert(tx('Angriff', 'Attack'), w.angriff),
+                    _wert(tx('Verteid.', 'Defense'), w.verteidigung),
+                    _wert(tx('Leben', 'Health'), w.leben),
+                    _wert(tx('Kraft', 'Power'), w.kraft),
                   ],
                 ),
               ),
             ),
             Text(
               _b.staerke != null
-                  ? 'Berechnet ohne Embleme/Kostüm · Stärke laut Spiel: ${_b.staerke}'
-                  : 'Ohne Embleme und Kostümbonus.',
+                  ? tx('Berechnet ohne Embleme/Kostüm · Stärke laut Spiel: ${_b.staerke}', 'Calculated without emblems/costume · in-game power: ${_b.staerke}')
+                  : tx('Ohne Embleme und Kostümbonus.', 'Without emblems and costume bonus.'),
               style: t.textTheme.bodySmall,
             ),
             const SizedBox(height: 12),
@@ -190,7 +191,7 @@ class _BesitzSheetState extends State<_BesitzSheet> {
                   _b.lb = 0;
                   _b.level = maxLevel(h.sterne, stufen, 0);
                 }),
-                child: const Text('Auf Max'),
+                child: Text(tx('Auf Max', 'Set max')),
               ),
               const Spacer(),
               if (!_neu)
@@ -199,7 +200,7 @@ class _BesitzSheetState extends State<_BesitzSheet> {
                     await sammlung.entfernen(h.id);
                     if (context.mounted) Navigator.pop(context);
                   },
-                  child: const Text('Entfernen', style: TextStyle(color: Colors.redAccent)),
+                  child: Text(tx('Entfernen', 'Remove'), style: TextStyle(color: Colors.redAccent)),
                 ),
               const SizedBox(width: 8),
               FilledButton(
@@ -208,7 +209,7 @@ class _BesitzSheetState extends State<_BesitzSheet> {
                   await sammlung.aktualisieren(_b);
                   if (context.mounted) Navigator.pop(context);
                 },
-                child: Text(_neu ? 'Hinzufügen' : 'Speichern'),
+                child: Text(_neu ? tx('Hinzufügen', 'Add') : tx('Speichern', 'Save')),
               ),
             ]),
           ],
