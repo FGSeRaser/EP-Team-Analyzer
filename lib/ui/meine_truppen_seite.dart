@@ -2,11 +2,14 @@
 // Autor: FGSeRaser – https://github.com/FGSeRaser
 
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../daten/datenbank.dart';
 import '../daten/sprache.dart';
 import '../daten/truppen.dart';
 import '../daten/truppen_besitz.dart';
+import '../erkennung/screenshot.dart';
+import '../erkennung/truppen_text.dart';
 import 'sammlung_scope.dart';
 import 'widgets.dart';
 
@@ -29,7 +32,13 @@ class MeineTruppenSeite extends StatelessWidget {
     final w = truppenVon(db);
     final truppen = sammlung.truppen;
     return Scaffold(
-      appBar: AppBar(title: Text(tx('Meine Truppen', 'My troops'))),
+      appBar: AppBar(title: Text(tx('Meine Truppen', 'My troops')), actions: [
+        IconButton(
+          tooltip: tx('Aus Screenshot übernehmen', 'Import from screenshot'),
+          onPressed: () => truppenAusScreenshot(context, db),
+          icon: const Icon(Icons.add_a_photo_outlined),
+        ),
+      ]),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => truppeBearbeiten(context, db, null),
         icon: const Icon(Icons.add),
@@ -43,6 +52,14 @@ class MeineTruppenSeite extends StatelessWidget {
             child: Text(tx(
                 'Trag hier deine Truppen aus der Kaserne ein. Der Team-Builder gibt dann jedem Helden die passende Truppe seiner Farbe – jede Truppe einmal pro Team.',
                 'Enter your troops from the barracks. The team builder then gives every hero a fitting troop of its color – each troop once per team.')),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: OutlinedButton.icon(
+              onPressed: () => truppenAusScreenshot(context, db),
+              icon: const Icon(Icons.add_a_photo_outlined),
+              label: Text(tx('Truppen per Screenshot übernehmen', 'Import troops from a screenshot')),
+            ),
           ),
           if (truppen.isEmpty)
             Padding(
@@ -248,5 +265,171 @@ class _TruppenSheetState extends State<_TruppenSheet> {
         ]),
       ),
     );
+  }
+}
+
+/// Screenshot(s) aus der Kaserne wählen, Truppen erkennen, prüfen lassen und speichern
+Future<void> truppenAusScreenshot(BuildContext context, Datenbank db) async {
+  final dateien = await ImagePicker().pickMultiImage();
+  if (dateien.isEmpty || !context.mounted) return;
+  final w = truppenVon(db);
+  final gefunden = <TruppenTreffer>[];
+  showDialog<void>(
+    context: context,
+    barrierDismissible: false,
+    builder: (_) => const Center(child: CircularProgressIndicator()),
+  );
+  try {
+    for (final d in dateien) {
+      final shot = await screenshotLaden(await d.readAsBytes(), pfad: d.path);
+      final zeilen = await textLesen(shot);
+      gefunden.addAll(truppenAusText(zeilen, w, bild: shot.bild));
+    }
+  } finally {
+    if (context.mounted) Navigator.of(context, rootNavigator: true).pop();
+  }
+  if (!context.mounted) return;
+  if (gefunden.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      duration: const Duration(seconds: 6),
+      content: Text(tx(
+          'Keine Truppe erkannt. Am besten die Truppen-Ansicht öffnen, sodass Name und Level gut lesbar sind.',
+          'No troop found. Open the troop view so that name and level are clearly readable.')),
+    ));
+    return;
+  }
+  await showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    showDragHandle: true,
+    builder: (_) => _TruppenPruefen(db: db, treffer: gefunden),
+  );
+}
+
+class _TruppenPruefen extends StatefulWidget {
+  final Datenbank db;
+  final List<TruppenTreffer> treffer;
+  const _TruppenPruefen({required this.db, required this.treffer});
+
+  @override
+  State<_TruppenPruefen> createState() => _TruppenPruefenState();
+}
+
+class _TruppenPruefenState extends State<_TruppenPruefen> {
+  @override
+  Widget build(BuildContext context) {
+    final t = Theme.of(context);
+    final w = truppenVon(widget.db);
+    final liste = widget.treffer;
+    final ok = liste.where((x) => x.uebernehmen).every((x) => x.farbe.isNotEmpty);
+    return DraggableScrollableSheet(
+      expand: false,
+      initialChildSize: 0.8,
+      builder: (context, scroll) => Column(children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(tx('${liste.length} Truppen erkannt', '${liste.length} troops found'), style: t.textTheme.titleLarge),
+            Text(tx('Bitte kurz prüfen – Farbe und Level kannst du antippen und ändern.',
+                'Please check – tap color and level to change them.'), style: t.textTheme.bodySmall),
+          ]),
+        ),
+        Expanded(
+          child: ListView(controller: scroll, padding: const EdgeInsets.symmetric(horizontal: 12), children: [
+            for (final x in liste)
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(4, 4, 12, 8),
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    CheckboxListTile(
+                      value: x.uebernehmen,
+                      contentPadding: EdgeInsets.zero,
+                      controlAffinity: ListTileControlAffinity.leading,
+                      onChanged: (v) => setState(() => x.uebernehmen = v ?? false),
+                      title: Text(x.typ == 'leg' ? (x.legName ?? 'Legendär') : truppenTypName(x.typ, w)),
+                      subtitle: Text(tx('Gelesen: „${x.gelesen}“', 'Read: "${x.gelesen}"'), style: t.textTheme.bodySmall),
+                    ),
+                    Wrap(spacing: 4, runSpacing: 4, children: [
+                      for (final f in elementFarben.keys)
+                        ChoiceChip(
+                          visualDensity: VisualDensity.compact,
+                          avatar: CircleAvatar(backgroundColor: elementFarben[f], radius: 7),
+                          label: Text(elementName(f)),
+                          selected: x.farbe == f,
+                          onSelected: (_) => setState(() => x.farbe = f),
+                        ),
+                    ]),
+                    if (x.farbe.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(tx('Farbe nicht sicher erkannt – bitte wählen', 'Color not detected – please choose'),
+                            style: TextStyle(color: t.colorScheme.error, fontSize: 12)),
+                      ),
+                    Row(children: [
+                      SizedBox(width: 80, child: Text('Level ${x.level}')),
+                      Expanded(
+                        child: Slider(
+                          value: x.level.toDouble(),
+                          min: 1,
+                          max: x.typ == 'leg' ? 40 : 30,
+                          divisions: x.typ == 'leg' ? 39 : 29,
+                          label: '${x.level}',
+                          onChanged: (v) => setState(() => x.level = v.round()),
+                        ),
+                      ),
+                    ]),
+                  ]),
+                ),
+              ),
+          ]),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: ok ? _speichern : null,
+              icon: const Icon(Icons.check),
+              label: Text(tx('Übernehmen', 'Import')),
+            ),
+          ),
+        ),
+      ]),
+    );
+  }
+
+  Future<void> _speichern() async {
+    final sammlung = SammlungScope.lesen(context);
+    var neu = 0, aktualisiert = 0;
+    for (final x in widget.treffer.where((x) => x.uebernehmen && x.farbe.isNotEmpty)) {
+      // Gleiche Truppe schon vorhanden? Dann nur das Level aktualisieren.
+      final vorhanden = sammlung.truppen
+          .where((t) => t.farbe == x.farbe && t.typ == x.typ && t.legName == x.legName)
+          .toList();
+      if (vorhanden.isNotEmpty) {
+        final t = vorhanden.first;
+        if (t.level != x.level) {
+          t.level = x.level;
+          await sammlung.truppeSpeichern(t);
+          aktualisiert++;
+        }
+      } else {
+        await sammlung.truppeSpeichern(EigeneTruppe(
+          id: '${DateTime.now().microsecondsSinceEpoch}$neu',
+          farbe: x.farbe,
+          typ: x.typ,
+          legName: x.legName,
+          sterne: x.typ == 'leg' ? 5 : 4,
+          level: x.level,
+        ));
+        neu++;
+      }
+    }
+    if (!mounted) return;
+    final melden = ScaffoldMessenger.of(context);
+    Navigator.pop(context);
+    melden.showSnackBar(SnackBar(
+      content: Text(tx('$neu neue Truppen, $aktualisiert aktualisiert', '$neu new troops, $aktualisiert updated')),
+    ));
   }
 }

@@ -11,6 +11,9 @@ import 'package:ep_team_analyzer/daten/werte.dart';
 import 'package:ep_team_analyzer/daten/sammlung.dart';
 import 'package:ep_team_analyzer/erkennung/erkennung.dart';
 import 'package:ep_team_analyzer/erkennung/kartentext.dart';
+import 'package:ep_team_analyzer/erkennung/truppen_text.dart';
+import 'dart:math' as math;
+import 'dart:typed_data';
 import 'package:ep_team_analyzer/daten/team_builder.dart';
 import 'package:ep_team_analyzer/daten/truppen.dart';
 import 'package:ep_team_analyzer/daten/truppen_besitz.dart';
@@ -214,5 +217,46 @@ void main() {
     final mit = w.teamMitTruppen([h], {h.id: krit}).first;
     expect(mit.effekte, contains('crit_up'));
     expect(h.effekte.contains('crit_up'), isFalse, reason: 'Original bleibt unverändert');
+  });
+
+  test('Neu würfeln liefert andere Teams, die trotzdem ausgewogen sind', () {
+    final pool = db.helden.where((h) => !h.kommend && h.sterne == 4 && h.kostuemVon == null).take(120).toList();
+    final erst = TeamBuilder(Analyse(db)).baue(pool, Modus.angriff);
+    expect(erst, isNotEmpty);
+    expect(erst.every((v) => v.helden.every((h) => h.sterne == 4)), isTrue);
+    final gezeigt = [for (final v in erst) v.helden.map((h) => h.basisId).toSet()];
+    final neu = TeamBuilder(Analyse(db), zufall: math.Random(7), schonGezeigt: gezeigt).baue(pool, Modus.angriff);
+    expect(neu, isNotEmpty);
+    for (final v in neu) {
+      final ids = v.helden.map((h) => h.basisId).toSet();
+      expect(gezeigt.any((g) => g.length == ids.length && g.containsAll(ids)), isFalse, reason: 'kein Team doppelt');
+      final rollen = v.helden.map(TeamBuilder.hauptRolle).toList();
+      expect(rollen.where((r) => r == 'heiler').length, lessThanOrEqualTo(2));
+    }
+  });
+
+  test('Truppen aus Screenshot-Text: Name, Level und Farbe', () {
+    final w = truppenVon(db);
+    final zeilen = [
+      const TextZeile('Mystic Mages', 100, 400, 260, 420),
+      const TextZeile('Level 23/30', 110, 425, 240, 440),
+      const TextZeile('Divine Wizards', 400, 400, 560, 420),
+      const TextZeile('Lvl 17', 420, 425, 500, 440),
+      const TextZeile('Mana +5 %', 100, 500, 200, 520),
+    ];
+    final t = truppenAusText(zeilen, w);
+    expect(t.length, 2);
+    expect((t[0].farbe, t[0].typ, t[0].level), ('lila', 'mana', 23));
+    expect((t[1].farbe, t[1].typ, t[1].level), ('gelb', 'magie', 17));
+    expect(truppeAusName('Barbaric Alpha Minotaur', w)?.$2, 'krit');
+    // Farbe aus Pixeln: komplett blaues Bild
+    final rgba = Uint8List(20 * 20 * 4);
+    for (var i = 0; i < 400; i++) {
+      rgba[i * 4] = 30;
+      rgba[i * 4 + 1] = 80;
+      rgba[i * 4 + 2] = 220;
+      rgba[i * 4 + 3] = 255;
+    }
+    expect(farbeImBereich(Bild(rgba, 20, 20), 0, 0, 19, 19), 'blau');
   });
 }

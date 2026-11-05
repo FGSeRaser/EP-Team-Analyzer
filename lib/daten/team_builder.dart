@@ -82,7 +82,21 @@ class TeamBuilder {
   /// Eigene Truppen (für die Zuteilung)
   final List<EigeneTruppe> truppenInventar;
 
-  TeamBuilder(this.a, {this.kraftVon = const {}, this.gegnerKraft = const {}, this.truppenInventar = const []});
+  /// Zufall für „Neu würfeln“ – ohne Zufall kommt immer dasselbe beste Team
+  final math.Random? zufall;
+
+  /// Bereits gezeigte Teams (Basis-IDs) – neue Würfe sollen sich davon unterscheiden
+  final List<Set<String>> schonGezeigt;
+
+  TeamBuilder(this.a,
+      {this.kraftVon = const {},
+      this.gegnerKraft = const {},
+      this.truppenInventar = const [],
+      this.zufall,
+      this.schonGezeigt = const []});
+
+  final Map<String, double> _rauschen = {};
+  double _rauschenVon(Held h) => zufall == null ? 0 : _rauschen.putIfAbsent(h.basisId, () => zufall!.nextDouble() * 0.10);
 
   /// Jedem Helden die beste eigene Truppe seiner Farbe zuteilen (jede Truppe einmal pro Team)
   Map<String, EigeneTruppe> truppenZuteilen(List<Held> team, Modus m) {
@@ -216,6 +230,7 @@ class TeamBuilder {
       extra += 0.35 * vorteil;
     }
     extra += harmonie(t, m).wert;
+    extra += zusammenspiel(t, m).wert;
     // Wer sich selbst schwächt, ist nur mit gutem Grund im Team
     extra -= 0.02 * t.where((h) => h.effekte.contains('self_debuff')).length;
     // Zu viele langsame Helden im Angriff
@@ -294,6 +309,96 @@ class TeamBuilder {
     final mitlaeufer = t.where((h) => !zuordnung.containsKey(h.id)).length;
     wert -= 0.04 * mitlaeufer;
     return (wert: wert, gruende: gruende);
+  }
+
+  static const _treffer = ['hit_aoe', 'hit_three', 'hit_single', 'hit_spread', 'hit_random', 'hit_chain', 'hit_edges', 'extra_attack'];
+
+  /// Wie gut sich die Helden gegenseitig unterstützen: Verstärker brauchen
+  /// Schadensmacher, Mana-Helfer brauchen langsame Helden, gleiche Buffs
+  /// überschreiben sich im Spiel (sie stapeln nicht).
+  ({double wert, List<String> gut, List<String> schlecht}) zusammenspiel(List<Held> t, Modus m) {
+    var wert = 0.0;
+    final gut = <String>[];
+    final schlecht = <String>[];
+    if (t.length < 3) return (wert: 0.0, gut: gut, schlecht: schlecht);
+    List<Held> mit(List<String> fx) => t.where((h) => fx.any(h.effekte.contains)).toList();
+    String namen(Iterable<Held> l) => l.map((h) => h.nameL).join(', ');
+    final schadenMacher = mit(_treffer);
+
+    // 1) Angriff hoch / Krit hoch verstärkt die Schadensmacher
+    final booster = mit(const ['atk_up', 'crit_up']);
+    if (m != Modus.verteidigung && booster.isNotEmpty) {
+      final profitieren = schadenMacher.where((h) => !booster.contains(h)).toList();
+      if (profitieren.length >= 2) {
+        wert += 0.04;
+        gut.add(tx('${booster.first.nameL} verstärkt den Schaden von ${namen(profitieren.take(3))}',
+            '${booster.first.nameL} boosts the damage of ${namen(profitieren.take(3))}'));
+      }
+    }
+    // 2) Verteidigung runter öffnet den Gegner für die Schadensmacher
+    final oeffner = mit(_vertRunter);
+    if (oeffner.isNotEmpty) {
+      final profitieren = schadenMacher.where((h) => !oeffner.contains(h)).toList();
+      if (profitieren.length >= 2) {
+        wert += 0.04;
+        gut.add(tx('${oeffner.first.nameL} senkt die Verteidigung – ${namen(profitieren.take(3))} treffen härter',
+            '${oeffner.first.nameL} lowers defense – ${namen(profitieren.take(3))} hit harder'));
+      }
+    }
+    // 3) Mana-Helfer machen langsame Helden schneller
+    final manaHelfer = mit(const ['mana_up', 'mana_gain']);
+    final langsam = t.where((h) => (h.tempoId == 'slow' || h.tempoId == 'very_slow') && !manaHelfer.contains(h)).toList();
+    if (manaHelfer.isNotEmpty && langsam.isNotEmpty) {
+      wert += 0.02 + 0.01 * math.min(langsam.length, 2);
+      gut.add(tx('${manaHelfer.first.nameL} lädt die langsamen ${namen(langsam)} schneller auf',
+          '${manaHelfer.first.nameL} charges the slow ${namen(langsam)} faster'));
+    }
+    // 4) Schaden über Zeit + „mehr Schaden erhalten“ / längere Leiden
+    final dot = mit(const ['dot', 'dot_poison', 'dot_burn', 'dot_bleed', 'dot_water', 'dot_frost', 'dot_sand', 'dot_curse']);
+    final dotHilfe = mit(const ['ailment_turns_up', 'dmg_taken_up']);
+    if (dot.isNotEmpty && dotHilfe.any((h) => !dot.contains(h) || dot.length > 1)) {
+      wert += 0.02;
+      gut.add(tx('${namen(dotHilfe.take(1))} verstärkt den Schaden über Zeit von ${namen(dot.take(2))}',
+          '${namen(dotHilfe.take(1))} amplifies the damage over time of ${namen(dot.take(2))}'));
+    }
+    // 5) Tank + Heiler halten zusammen (vor allem Verteidigung/Titan)
+    final tanks = t.where((h) => hauptRolle(h) == 'tank').toList();
+    final heiler = mit(_heilung);
+    if (tanks.isNotEmpty && heiler.any((h) => !tanks.contains(h)) && m != Modus.titan) {
+      wert += 0.02;
+    }
+    // 6) Farb-Stapel mit Element-Verstärkung (z. B. 3× Rot + „Feuerschaden hoch“)
+    if (m == Modus.angriff || m == Modus.titan || m == Modus.gegner) {
+      final farben = <String, int>{};
+      for (final h in t) {
+        farben[h.element] = (farben[h.element] ?? 0) + 1;
+      }
+      final stapel = farben.entries.where((e) => e.value >= 3).toList();
+      if (stapel.isNotEmpty && mit(const ['elem_dmg_up', 'elem_def_down']).isNotEmpty) {
+        wert += 0.03;
+        gut.add(tx('Farb-Stapel: ${stapel.first.value}× ${_farbName(stapel.first.key)} mit Element-Verstärkung',
+            'Color stack: ${stapel.first.value}× ${_farbName(stapel.first.key)} with element boost'));
+      }
+    }
+    // 7) Gleiche Buffs/Debuffs überschreiben sich – doppelt bringt fast nichts
+    for (final gruppe in const [
+      ['atk_up'],
+      ['def_down'],
+      ['def_up'],
+      ['mana_up'],
+    ]) {
+      final reine = t.where((h) {
+        if (!gruppe.any(h.effekte.contains)) return false;
+        // Nur zählen, wenn der Held sonst wenig mitbringt (reiner Buffer)
+        return !h.effekte.any(_treffer.contains) || h.effekte.length <= 3;
+      }).toList();
+      if (reine.length >= 2) {
+        wert -= 0.03 * (reine.length - 1);
+        schlecht.add(tx('${namen(reine)} geben denselben Effekt – der überschreibt sich im Spiel',
+            '${namen(reine)} give the same effect – it overwrites itself in the game'));
+      }
+    }
+    return (wert: wert, gut: gut, schlecht: schlecht);
   }
 
   double _aufgabenAnteil(List<Held> t, Modus m) {
@@ -431,6 +536,9 @@ class TeamBuilder {
     }
     final fuerAufgaben = m == Modus.gegner ? Modus.angriff : m;
     schlecht.insertAll(0, harmonie(t, fuerAufgaben).gruende);
+    final zs = zusammenspiel(t, m);
+    gut.insertAll(0, zs.gut);
+    schlecht.addAll(zs.schlecht);
     final zuordnung = _aufgabenWert(t, fuerAufgaben).zuordnung;
     final aufgabenText = <String, String>{
       for (final h in t)
@@ -479,16 +587,37 @@ class TeamBuilder {
   }) {
     final kandidaten = _vorauswahl(pool, m, titanFarbe: titanFarbe, gegner: gegner);
     if (kandidaten.isEmpty) return const [];
-    double wert(List<Held> t) => teamWert(t, m, titanFarbe: titanFarbe, gegner: gegner);
+    double basis(List<Held> t) => teamWert(t, m, titanFarbe: titanFarbe, gegner: gegner);
+    // Beim Würfeln: kleines Zufallsrauschen je Held und Abzug für Teams,
+    // die einem schon gezeigten Team zu sehr ähneln – so kommen neue Builds,
+    // die trotzdem gut zusammenpassen.
+    double wert(List<Held> t) {
+      var w = basis(t);
+      if (zufall != null && t.isNotEmpty) w += t.map(_rauschenVon).reduce((x, y) => x + y) / t.length;
+      if (schonGezeigt.isNotEmpty) {
+        final ids = t.map((h) => h.basisId).toSet();
+        final gleich = schonGezeigt.map((g) => g.intersection(ids).length).reduce(math.max);
+        if (gleich >= 3) w -= 0.05 * (gleich - 2);
+      }
+      return w;
+    }
 
+    String schluessel(List<Held> t) => (t.map((h) => h.basisId).toList()..sort()).join('|');
+    final verboten = {for (final g in schonGezeigt) (g.toList()..sort()).join('|')};
     final ergebnisse = <List<Held>>[];
-    final startHelden = kandidaten.take(anzahl * 2).toList();
+    final startHelden = <Held>[];
+    if (zufall != null) {
+      // Zufällige Starthelden aus dem oberen Teil der Kandidaten
+      final oben = kandidaten.take(math.max(12, anzahl * 4)).toList()..shuffle(zufall);
+      startHelden.addAll(oben.take(anzahl * 3));
+    } else {
+      startHelden.addAll(kandidaten.take(anzahl * 2));
+    }
     for (final start in startHelden) {
       final team = _suche(kandidaten, [start], wert);
-      final schluessel = (team.map((h) => h.basisId).toList()..sort()).join('|');
-      if (ergebnisse.every((e) => (e.map((h) => h.basisId).toList()..sort()).join('|') != schluessel)) {
-        ergebnisse.add(team);
-      }
+      final k = schluessel(team);
+      if (verboten.contains(k)) continue;
+      if (ergebnisse.every((e) => schluessel(e) != k)) ergebnisse.add(team);
     }
     ergebnisse.sort((x, y) => wert(y).compareTo(wert(x)));
     return [
@@ -501,7 +630,7 @@ class TeamBuilder {
     final rest = [...pool];
     final out = <TeamVorschlag>[];
     for (var i = 0; i < teams; i++) {
-      final v = baue(rest, Modus.krieg, anzahl: 1);
+      final v = baue(rest, Modus.krieg, anzahl: zufall == null ? 1 : 2);
       if (v.isEmpty || v.first.helden.length < 5) break;
       out.add(v.first);
       final benutzt = v.first.helden.map((h) => h.basisId).toSet();
