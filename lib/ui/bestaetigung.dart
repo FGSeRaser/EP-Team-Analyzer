@@ -104,13 +104,13 @@ class _ZellenMaler extends CustomPainter {
 class BestaetigungSeite extends StatefulWidget {
   final Datenbank db;
   final List<Fund> funde;
-  final String titel;
+  final String? titel;
   final bool ausScreenshots;
-  BestaetigungSeite({
+  const BestaetigungSeite({
     super.key,
     required this.db,
     required this.funde,
-    this.titel = tx('Helden prüfen', 'Check heroes'),
+    this.titel,
     this.ausScreenshots = false,
   });
 
@@ -191,7 +191,7 @@ class _BestaetigungSeiteState extends State<BestaetigungSeite> {
     final unsicher = widget.funde.where((f) => f.unsicher).length;
 
     return Scaffold(
-      appBar: AppBar(title: Text(widget.titel)),
+      appBar: AppBar(title: Text(widget.titel ?? tx('Helden prüfen', 'Check heroes'))),
       body: ListView(
         padding: const EdgeInsets.only(bottom: 100),
         children: [
