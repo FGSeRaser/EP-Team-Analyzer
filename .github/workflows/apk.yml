@@ -35,11 +35,6 @@ jobs:
           fi
           python3 tools/android_anpassen.py
 
-      - name: Feste Signatur verwenden (damit Updates über die alte App installiert werden können)
-        run: |
-          mkdir -p ~/.android
-          cp android-signatur/debug.keystore ~/.android/debug.keystore
-
       - run: flutter pub get
 
       - name: Code prüfen
@@ -59,6 +54,15 @@ jobs:
         run: |
           flutter build apk --release --build-number=${{ steps.version.outputs.build }} --build-name=${{ steps.version.outputs.name }}
           cp build/app/outputs/flutter-apk/app-release.apk EP-Team-Analyzer.apk
+
+      - name: Signatur prüfen (muss unser fester Schlüssel sein, sonst gehen Updates nicht)
+        run: |
+          soll=$(keytool -exportcert -keystore android-signatur/debug.keystore -storepass android -alias androiddebugkey | sha256sum | cut -d' ' -f1)
+          apksigner=$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -1)apksigner
+          ist=$("$apksigner" verify --print-certs EP-Team-Analyzer.apk | grep -m1 'SHA-256' | sed 's/.*: //')
+          echo "Soll: $soll"
+          echo "Ist:  $ist"
+          if [ "$soll" != "$ist" ]; then echo "::error::APK ist nicht mit android-signatur/debug.keystore signiert!"; exit 1; fi
 
       - uses: actions/upload-artifact@v4
         with:

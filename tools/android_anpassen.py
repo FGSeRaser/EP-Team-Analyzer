@@ -86,3 +86,43 @@ if quelle.exists():
                           'android:icon="@mipmap/ic_launcher"\n        android:roundIcon="@mipmap/ic_launcher_round"', 1)
         m.write_text(xml, encoding="utf-8")
     print("App-Icon eingebaut.")
+
+# Feste Signatur: jede APK mit android-signatur/debug.keystore signieren,
+# damit Updates über die installierte App gehen (sonst "App nicht installiert")
+kts = Path("android/app/build.gradle.kts")
+groovy = Path("android/app/build.gradle")
+if kts.exists():
+    g = kts.read_text(encoding="utf-8")
+    if "festeSignatur" not in g:
+        block = """    signingConfigs {
+        create("festeSignatur") {
+            storeFile = file("../../android-signatur/debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+    }
+
+    buildTypes {"""
+        g = g.replace("    buildTypes {", block, 1)
+        g = g.replace('signingConfig = signingConfigs.getByName("debug")',
+                      'signingConfig = signingConfigs.getByName("festeSignatur")')
+        kts.write_text(g, encoding="utf-8")
+    print("Signatur fest eingestellt (build.gradle.kts).")
+elif groovy.exists():
+    g = groovy.read_text(encoding="utf-8")
+    if "festeSignatur" not in g:
+        block = """    signingConfigs {
+        festeSignatur {
+            storeFile file("../../android-signatur/debug.keystore")
+            storePassword "android"
+            keyAlias "androiddebugkey"
+            keyPassword "android"
+        }
+    }
+
+    buildTypes {"""
+        g = g.replace("    buildTypes {", block, 1)
+        g = g.replace("signingConfig signingConfigs.debug", "signingConfig signingConfigs.festeSignatur")
+        groovy.write_text(g, encoding="utf-8")
+    print("Signatur fest eingestellt (build.gradle).")

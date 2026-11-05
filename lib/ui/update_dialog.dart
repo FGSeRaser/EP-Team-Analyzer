@@ -111,8 +111,10 @@ class _UpdateDialogState extends State<_UpdateDialog> {
           ],
           const SizedBox(height: 12),
           Text(
-            tx('Deine Sammlung bleibt erhalten. Beim ersten Mal fragt Android, ob die App Updates installieren darf – bitte erlauben.',
-                'Your collection is kept. The first time Android asks whether the app may install updates – please allow it.'),
+            tx('Deine Sammlung bleibt erhalten. Beim ersten Mal fragt Android, ob die App Updates installieren darf – bitte erlauben.\n'
+                    'Meldet Android „App nicht installiert“: unter Meine → ⋮ → „Sicherung kopieren“ sichern, alte App deinstallieren, neue installieren und die Sicherung wieder einfügen.',
+                'Your collection is kept. The first time Android asks whether the app may install updates – please allow it.\n'
+                    'If Android says "App not installed": back up via Mine → ⋮ → "Copy backup", uninstall the old app, install the new one and paste the backup.'),
             style: t.textTheme.bodySmall,
           ),
         ]),
