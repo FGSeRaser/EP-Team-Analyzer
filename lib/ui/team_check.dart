@@ -4,6 +4,9 @@
 import 'package:flutter/material.dart';
 
 import '../daten/analyse.dart';
+import '../daten/team_builder.dart';
+import '../daten/truppen.dart';
+import '../daten/truppen_besitz.dart';
 import '../daten/datenbank.dart';
 import '../daten/sprache.dart';
 import 'held_detail.dart';
@@ -16,7 +19,10 @@ class TeamCheck extends StatefulWidget {
 
   /// Optional: Team, mit dem die Seite startet (z. B. aus dem Team-Builder)
   final List<Held> start;
-  const TeamCheck({super.key, required this.db, this.start = const []});
+
+  /// Optional: Truppen je Held-ID (z. B. aus dem Team-Builder)
+  final Map<String, EigeneTruppe> startTruppen;
+  const TeamCheck({super.key, required this.db, this.start = const [], this.startTruppen = const {}});
 
   @override
   State<TeamCheck> createState() => _TeamCheckState();
@@ -24,12 +30,14 @@ class TeamCheck extends StatefulWidget {
 
 class _TeamCheckState extends State<TeamCheck> {
   final List<Held?> _slots = List<Held?>.filled(5, null);
+  final List<EigeneTruppe?> _truppen = List<EigeneTruppe?>.filled(5, null);
 
   @override
   void initState() {
     super.initState();
     for (var i = 0; i < widget.start.length && i < 5; i++) {
       _slots[i] = widget.start[i];
+      _truppen[i] = widget.startTruppen[widget.start[i].id];
     }
   }
 
@@ -49,7 +57,72 @@ class _TeamCheckState extends State<TeamCheck> {
         builder: (_) => HeldenListe(db: widget.db, auswahl: true, nurMeineStart: hatSammlung),
       ),
     );
-    if (h != null) setState(() => _slots[i] = h);
+    if (h != null) {
+      setState(() {
+        _slots[i] = h;
+        if (_truppen[i] != null && _truppen[i]!.farbe != h.element) _truppen[i] = null;
+      });
+    }
+  }
+
+  /// Truppe für Platz i auswählen (nur Truppen in der Farbe des Helden)
+  Future<void> _truppeWaehlen(int i) async {
+    final h = _slots[i];
+    if (h == null) return;
+    final sammlung = SammlungScope.lesen(context);
+    final w = truppenVon(widget.db);
+    final passend = sammlung.truppen.where((x) => x.farbe == h.element).toList()
+      ..sort((a, b) => w.truppenWert(b, h, Modus.angriff, Analyse(widget.db).rollenWerte(h))
+          .compareTo(w.truppenWert(a, h, Modus.angriff, Analyse(widget.db).rollenWerte(h))));
+    final wahl = await showModalBottomSheet<Object>(
+      context: context,
+      showDragHandle: true,
+      builder: (ctx) => SafeArea(
+        child: ListView(shrinkWrap: true, children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: Text(tx('Truppe für ${h.nameL} (${elementName(h.element)})', 'Troop for ${h.nameL} (${elementName(h.element)})'),
+                style: Theme.of(ctx).textTheme.titleMedium),
+          ),
+          if (passend.isEmpty)
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(tx('Keine Truppe in dieser Farbe eingetragen – unter „Meine → Truppen“ hinzufügen.',
+                  'No troop of this color yet – add one under "Mine → Troops".')),
+            ),
+          for (final tr in passend)
+            ListTile(
+              leading: const Icon(Icons.shield),
+              title: Text('${tr.typName(w)} · Level ${tr.level}'),
+              subtitle: Text([
+                if (tr.manaProzent(w) > 0) 'Mana +${tr.manaProzent(w)} %',
+                if (tr.kritProzent(w) > 0) '${tx('Krit', 'Crit')} ${tr.kritProzent(w)} %',
+                if (tr.umgehenProzent(w) > 0) '${tx('Umgehen', 'Bypass')} ${tr.umgehenProzent(w)} %',
+              ].join(' · ')),
+              onTap: () => Navigator.pop(ctx, tr),
+            ),
+          ListTile(
+            leading: const Icon(Icons.block),
+            title: Text(tx('Keine Truppe', 'No troop')),
+            onTap: () => Navigator.pop(ctx, 'keine'),
+          ),
+        ]),
+      ),
+    );
+    if (wahl == null) return;
+    setState(() => _truppen[i] = wahl is EigeneTruppe ? wahl : null);
+  }
+
+  void _truppenAutomatisch() {
+    final team = _slots.whereType<Held>().toList();
+    final b = TeamBuilder(Analyse(widget.db), truppenInventar: SammlungScope.lesen(context).truppen);
+    final zuteilung = b.truppenZuteilen(team, Modus.angriff);
+    setState(() {
+      for (var i = 0; i < 5; i++) {
+        final h = _slots[i];
+        _truppen[i] = h == null ? null : zuteilung[h.id];
+      }
+    });
   }
 
   @override
@@ -63,11 +136,20 @@ class _TeamCheckState extends State<TeamCheck> {
       appBar: AppBar(
         title: Text(tx('Team-Check', 'Team check')),
         actions: [
+          if (team.isNotEmpty && SammlungScope.of(context).truppen.isNotEmpty)
+            IconButton(
+              tooltip: tx('Truppen automatisch verteilen', 'Assign troops automatically'),
+              icon: const Icon(Icons.shield),
+              onPressed: _truppenAutomatisch,
+            ),
           if (team.isNotEmpty)
             IconButton(
               tooltip: tx('Leeren', 'Clear'),
               icon: const Icon(Icons.delete_sweep),
-              onPressed: () => setState(() => _slots.fillRange(0, 5, null)),
+              onPressed: () => setState(() {
+                _slots.fillRange(0, 5, null);
+                _truppen.fillRange(0, 5, null);
+              }),
             ),
         ],
       ),
@@ -108,7 +190,28 @@ class _TeamCheckState extends State<TeamCheck> {
                         ),
                         if (_slots[i] != null)
                           InkWell(
-                            onTap: () => setState(() => _slots[i] = null),
+                            onTap: () => _truppeWaehlen(i),
+                            child: Container(
+                              margin: const EdgeInsets.only(top: 2),
+                              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(color: elementFarbe(_slots[i]!.element).withAlpha(150)),
+                              ),
+                              child: Text(
+                                _truppen[i]?.kurz(truppenVon(db)) ?? tx('+ Truppe', '+ Troop'),
+                                style: t.textTheme.labelSmall,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ),
+                        if (_slots[i] != null)
+                          InkWell(
+                            onTap: () => setState(() {
+                              _slots[i] = null;
+                              _truppen[i] = null;
+                            }),
                             child: const Padding(
                               padding: EdgeInsets.all(2),
                               child: Icon(Icons.close, size: 16),
@@ -135,6 +238,11 @@ class _TeamCheckState extends State<TeamCheck> {
               ),
             )
           else ...[
+            if (_truppen.any((x) => x != null))
+              Abschnitt(tx('Truppen', 'Troops'), icon: Icons.shield, kinder: [
+                for (var i = 0; i < 5; i++)
+                  if (_slots[i] != null && _truppen[i] != null) _truppenZeile(t, _slots[i]!, _truppen[i]!),
+              ]),
             Abschnitt(tx('Überblick', 'Overview'), icon: Icons.insights, kinder: [
               Text(tx('Kraft gesamt: ${bericht.kraft}', 'Total power: ${bericht.kraft}')),
               const SizedBox(height: 6),
@@ -211,6 +319,24 @@ class _TeamCheckState extends State<TeamCheck> {
           ],
         ],
       ),
+    );
+  }
+
+  Widget _truppenZeile(ThemeData t, Held h, EigeneTruppe tr) {
+    final w = truppenVon(widget.db);
+    final ohne = w.steine(h, 0);
+    final mit = w.steine(h, tr.manaProzent(w));
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Text.rich(TextSpan(children: [
+        TextSpan(text: '${h.nameL}: ', style: const TextStyle(fontWeight: FontWeight.bold)),
+        TextSpan(text: '${tr.typName(w)} ${tr.level}'),
+        if (tr.manaProzent(w) > 0) TextSpan(text: ' · Mana +${tr.manaProzent(w)} %'),
+        if (ohne != null && mit != null && mit != ohne)
+          TextSpan(
+              text: tx(' · $ohne → $mit Steine', ' · $ohne → $mit tiles'),
+              style: const TextStyle(color: Colors.green)),
+      ])),
     );
   }
 }

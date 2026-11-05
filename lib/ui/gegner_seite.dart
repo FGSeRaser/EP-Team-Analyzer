@@ -111,7 +111,7 @@ class _GegnerSeiteState extends State<GegnerSeite> {
       for (final e in _staerke.entries)
         if (_gegner[e.key] != null) _gegner[e.key]!.id: e.value,
     };
-    final b = TeamBuilder(Analyse(widget.db), kraftVon: p.kraft, gegnerKraft: gegnerKraft);
+    final b = TeamBuilder(Analyse(widget.db), kraftVon: p.kraft, gegnerKraft: gegnerKraft, truppenInventar: p.truppen);
     final erg = b.baue(p.pool, Modus.gegner, gegner: gegner);
     if (!mounted) return;
     setState(() {

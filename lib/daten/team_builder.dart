@@ -10,6 +10,8 @@ import 'dart:math' as math;
 import 'analyse.dart';
 import 'datenbank.dart';
 import 'sprache.dart';
+import 'truppen.dart';
+import 'truppen_besitz.dart';
 
 enum Modus { verteidigung, angriff, krieg, titan, gegner }
 
@@ -52,7 +54,18 @@ class TeamVorschlag {
   final int? chance;
   final List<String> staerken;
   final List<String> schwaechen;
-  const TeamVorschlag(this.helden, this.wert, {this.chance, this.staerken = const [], this.schwaechen = const []});
+
+  /// Held-ID -> was er in diesem Team macht
+  final Map<String, String> aufgaben;
+
+  /// Held-ID -> zugeteilte eigene Truppe (falls Truppen eingetragen)
+  final Map<String, EigeneTruppe> truppen;
+  const TeamVorschlag(this.helden, this.wert,
+      {this.chance,
+      this.staerken = const [],
+      this.schwaechen = const [],
+      this.aufgaben = const {},
+      this.truppen = const {}});
 }
 
 class TeamBuilder {
@@ -66,7 +79,37 @@ class TeamBuilder {
   final Map<String, int> gegnerKraft;
   final Map<String, Map<String, int>> _rollenCache = {};
 
-  TeamBuilder(this.a, {this.kraftVon = const {}, this.gegnerKraft = const {}});
+  /// Eigene Truppen (für die Zuteilung)
+  final List<EigeneTruppe> truppenInventar;
+
+  TeamBuilder(this.a, {this.kraftVon = const {}, this.gegnerKraft = const {}, this.truppenInventar = const []});
+
+  /// Jedem Helden die beste eigene Truppe seiner Farbe zuteilen (jede Truppe einmal pro Team)
+  Map<String, EigeneTruppe> truppenZuteilen(List<Held> team, Modus m) {
+    if (truppenInventar.isEmpty) return const {};
+    final wissen = truppenVon(db);
+    final rest = <EigeneTruppe, int>{for (final t in truppenInventar) t: t.anzahl};
+    final out = <String, EigeneTruppe>{};
+    // Langsame Helden zuerst – ihnen hilft Mana am meisten
+    final reihenfolge = [...team]..sort((x, y) => tempoWert(x.tempoId).compareTo(tempoWert(y.tempoId)));
+    for (final h in reihenfolge) {
+      EigeneTruppe? beste;
+      var besterWert = -1.0;
+      for (final e in rest.entries) {
+        if (e.value <= 0 || e.key.farbe != h.element) continue;
+        final w = wissen.truppenWert(e.key, h, m, rollen(h));
+        if (w > besterWert) {
+          besterWert = w;
+          beste = e.key;
+        }
+      }
+      if (beste != null) {
+        out[h.id] = beste;
+        rest[beste] = rest[beste]! - 1;
+      }
+    }
+    return out;
+  }
 
   int kraftGegner(Held h) => gegnerKraft[h.id] ?? (h.kraft * 1.1).round();
 
@@ -82,15 +125,73 @@ class TeamBuilder {
   static const _flaeche = ['hit_aoe', 'hit_three'];
   static const _vertRunter = ['def_down', 'elem_def_down', 'dmg_taken_up'];
   static const _manaKontrolle = ['mana_debuff', 'mana_cut', 'special_block'];
+  static const _schutz = ['def_up', 'dmg_reduction', 'special_def_up', 'share_damage'];
+  static const _tankFx = ['taunt', 'def_up', 'counter', 'dmg_reduction', 'mimic', 'dodge'];
 
-  static double _tempoWert(String t) => switch (t) {
+  /// Wie früh kommt die Spezialfähigkeit? (schnelle Helden machen ihre Aufgabe öfter)
+  static double tempoWert(String t) => switch (t) {
         'very_fast' => 1.0,
-        'fast' => 0.85,
-        'average' => 0.6,
-        'slow' => 0.35,
-        'very_slow' => 0.2,
-        _ => 0.6,
+        'fast' => 0.9,
+        'average' => 0.75,
+        'slow' => 0.55,
+        'very_slow' => 0.4,
+        _ => 0.75,
       };
+
+  /// Aufgaben im Team je Modus: Name, Effekte, Gewicht, wie viele Helden sinnvoll sind
+  List<Aufgabe> aufgaben(Modus m) => switch (m) {
+        Modus.verteidigung => [
+            Aufgabe('tank', tx('Tank', 'Tank'), _tankFx, 1.6, 1),
+            Aufgabe('schaden', tx('Flächenschaden', 'AoE damage'), _flaeche, 1.2, 2),
+            Aufgabe('mana', tx('Mana-Kontrolle', 'Mana control'), _manaKontrolle, 0.8, 1),
+            Aufgabe('heilung', tx('Heilung', 'Healing'), _heilung, 0.8, 1),
+            Aufgabe('bannen', tx('Bannen', 'Dispel'), _bannen, 0.6, 1),
+            Aufgabe('reinigen', tx('Reinigen', 'Cleanse'), _reinigen, 0.6, 1),
+            Aufgabe('vert', tx('Verteidigung runter', 'Defense down'), _vertRunter, 0.5, 1),
+          ],
+        Modus.titan => [
+            Aufgabe('vert', tx('Verteidigung runter', 'Defense down'), _vertRunter, 2.2, 1),
+            Aufgabe('angriff', tx('Angriff hoch', 'Attack up'), const ['atk_up'], 1.6, 1),
+            Aufgabe('krit', tx('Krit hoch', 'Crit up'), const ['crit_up'], 0.6, 1),
+            Aufgabe('heilung', tx('Heilung', 'Healing'), _heilung, 0.6, 1),
+            Aufgabe('reinigen', tx('Reinigen', 'Cleanse'), _reinigen, 0.3, 1),
+            Aufgabe('mana', tx('Mana hoch', 'Mana up'), const ['mana_up', 'mana_gain'], 0.4, 1),
+          ],
+        _ => [
+            Aufgabe('heilung', tx('Heilung', 'Healing'), _heilung, 1.2, 1),
+            Aufgabe('reinigen', tx('Reinigen', 'Cleanse'), _reinigen, 1.1, 1),
+            Aufgabe('vert', tx('Verteidigung runter', 'Defense down'), _vertRunter, 1.2, 1),
+            Aufgabe('bannen', tx('Bannen', 'Dispel'), _bannen, 1.0, 1),
+            Aufgabe('schaden', tx('Schaden', 'Damage'), const ['hit_aoe', 'hit_three', 'hit_single', 'extra_attack'], 1.0, 2),
+            Aufgabe('angriff', tx('Angriff hoch', 'Attack up'), const ['atk_up', 'crit_up'], 0.6, 1),
+            Aufgabe('mana', tx('Mana-Kontrolle', 'Mana control'), _manaKontrolle, 0.5, 1),
+            Aufgabe('schutz', tx('Schutz', 'Protection'), _schutz, 0.4, 1),
+          ],
+      };
+
+  /// Erfüllung der Aufgaben: der schnellste passende Held zählt voll, weitere nur wenig
+  ({double wert, double max, Map<String, List<String>> zuordnung}) _aufgabenWert(List<Held> t, Modus m) {
+    var wert = 0.0, max = 0.0;
+    final zuordnung = <String, List<String>>{};
+    for (final auf in aufgaben(m)) {
+      max += auf.gewicht * (auf.anzahl == 1 ? 1 : 1.5);
+      final anbieter = t.where((h) => auf.effekte.any(h.effekte.contains)).toList()
+        ..sort((x, y) => tempoWert(y.tempoId).compareTo(tempoWert(x.tempoId)));
+      if (auf.key == 'tank' && t.isNotEmpty) {
+        // Tank: Verteidigungseffekte plus viel Leben/Verteidigung
+        final bester = t.reduce((x, y) => (rollen(x)['tank'] ?? 0) >= (rollen(y)['tank'] ?? 0) ? x : y);
+        wert += auf.gewicht * ((rollen(bester)['tank'] ?? 0) / 100).clamp(0.0, 1.0);
+        zuordnung.putIfAbsent(bester.id, () => []).add(auf.name);
+        continue;
+      }
+      for (var i = 0; i < anbieter.length; i++) {
+        final faktor = i == 0 ? 1.0 : (i < auf.anzahl ? 0.5 : 0.08);
+        wert += auf.gewicht * faktor * tempoWert(anbieter[i].tempoId);
+        if (i < auf.anzahl) zuordnung.putIfAbsent(anbieter[i].id, () => []).add(auf.name);
+      }
+    }
+    return (wert: wert, max: max, zuordnung: zuordnung);
+  }
 
   // ------------------------------------------------------------------------
   // Bewertung eines Teams
@@ -98,49 +199,116 @@ class TeamBuilder {
   double teamWert(List<Held> t, Modus m, {String? titanFarbe, List<Held> gegner = const []}) {
     if (t.isEmpty) return 0;
     if (m == Modus.gegner && gegner.isNotEmpty) {
-      return _logit(t, gegner) + 0.2 * _kraftAnteil(t);
+      return _logit(t, gegner) + 0.5 * _aufgabenAnteil(t, Modus.angriff) + 0.1 * _kraftAnteil(t);
     }
+    final aufgabe = _aufgabenAnteil(t, m);
     final kraftA = _kraftAnteil(t);
-    final tempo = t.map((h) => _tempoWert(h.tempoId)).reduce((x, y) => x + y) / t.length;
+    final tempo = t.map((h) => tempoWert(h.tempoId)).reduce((x, y) => x + y) / t.length;
 
-    double b(List<String> fx, double gewicht) => _hat(t, fx) ? gewicht : 0;
-    double bausteine;
-    double maxB;
-    switch (m) {
-      case Modus.verteidigung:
-        final tank = t.map((h) => rollen(h)['tank'] ?? 0).reduce(math.max) / 100;
-        bausteine = b(_heilung, 1) + b(_reinigen, 1) + b(_bannen, 0.8) + b(_flaeche, 1) + b(_manaKontrolle, 0.8) + 1.5 * tank;
-        maxB = 6.1;
-        final farben = t.map((h) => h.element).toSet().length;
-        bausteine += farben >= 3 ? 0.3 : 0;
-        maxB += 0.3;
-      case Modus.titan:
-        bausteine = b(['def_down'], 2) + b(['atk_up'], 1.5) + b(['elem_def_down', 'dmg_taken_up'], 1) +
-            b(_heilung, 0.7) + b(['crit_up'], 0.5) + b(_reinigen, 0.3);
-        maxB = 6;
-        if (titanFarbe != null) {
-          final vorteil = t.map((h) => farbVorteil(h.element, titanFarbe)).reduce((x, y) => x + y) / t.length;
-          bausteine += 2.5 * vorteil;
-          maxB += 2.5;
-        }
-      default: // Angriff, Krieg
-        bausteine = b(_heilung, 1) + b(_reinigen, 1) + b(_bannen, 1) + b(_vertRunter, 1) + b(['atk_up'], 0.8) +
-            b(_flaeche, 1);
-        maxB = 5.8;
+    var extra = 0.0;
+    if (m == Modus.verteidigung) {
+      final farben = t.map((h) => h.element).toSet().length;
+      extra += farben >= 3 ? 0.04 : 0;
     }
-    // Zweiter Heiler/Reiniger hilft auch noch etwas
-    if (t.where((h) => _heilung.any(h.effekte.contains)).length >= 2) bausteine += 0.2;
+    if (m == Modus.titan && titanFarbe != null) {
+      // Farbvorteil ist beim Titan das Wichtigste (doppelter Steinschaden)
+      final vorteil = t.map((h) => farbVorteil(h.element, titanFarbe)).reduce((x, y) => x + y) / t.length;
+      extra += 0.35 * vorteil;
+    }
+    extra += harmonie(t, m).wert;
+    // Wer sich selbst schwächt, ist nur mit gutem Grund im Team
+    extra -= 0.02 * t.where((h) => h.effekte.contains('self_debuff')).length;
+    // Zu viele langsame Helden im Angriff
+    if (m != Modus.verteidigung) {
+      final langsam = t.where((h) => h.tempoId == 'slow' || h.tempoId == 'very_slow').length;
+      if (langsam >= 3) extra -= 0.05 * (langsam - 2);
+    }
     final familien = <String, int>{};
     for (final h in t) {
       if (h.familie.isNotEmpty) familien[h.familie] = (familien[h.familie] ?? 0) + 1;
     }
-    final familienBonus = familien.values.where((n) => n >= 2).length * 0.03;
+    extra += familien.values.where((n) => n >= 2).length * 0.02;
 
-    return 0.40 * kraftA + 0.45 * (bausteine / maxB) + (m == Modus.verteidigung ? 0.05 : 0.15) * tempo + familienBonus;
+    // Aufgaben zuerst, Stärke nur nachrangig
+    return 0.60 * aufgabe + 0.25 * kraftA + 0.15 * tempo + extra;
   }
 
-  double _kraftAnteil(List<Held> t) =>
-      (t.map(kraft).reduce((x, y) => x + y) / t.length / 1500).clamp(0.0, 1.3).toDouble();
+  /// Hauptrolle eines Helden – daran sieht man, ob ein Team ausgewogen ist
+  static String hauptRolle(Held h) {
+    final fx = h.effekte;
+    bool hat(List<String> l) => l.any(fx.contains);
+    final heilt = hat(_heilung) || hat(_reinigen);
+    final flaeche = hat(_flaeche);
+    final einzel = fx.contains('hit_single') && !flaeche;
+    final stuetzt = hat(_vertRunter) || fx.contains('atk_up') || hat(_bannen) || hat(_manaKontrolle);
+    if (hat(const ['taunt', 'mimic']) || (fx.contains('counter') && hat(const ['def_up', 'dmg_reduction']))) return 'tank';
+    if (heilt && !flaeche && !einzel) return 'heiler';
+    if (heilt && (flaeche || einzel)) return stuetzt ? 'unterstuetzer' : 'heiler';
+    if (einzel) return stuetzt ? 'unterstuetzer' : 'sniper';
+    if (flaeche) return stuetzt ? 'unterstuetzer' : 'flaeche';
+    if (stuetzt) return 'unterstuetzer';
+    return 'sonstiges';
+  }
+
+  static String rollenName(String r) => switch (r) {
+        'tank' => 'Tank',
+        'heiler' => tx('Heiler', 'Healer'),
+        'sniper' => tx('Sniper (Einzelziel)', 'Sniper (single target)'),
+        'flaeche' => tx('Flächenschaden', 'AoE damage'),
+        'unterstuetzer' => tx('Unterstützer', 'Support'),
+        _ => tx('Sonstiges', 'Other'),
+      };
+
+  /// Zu viele Helden derselben Rolle bringen nichts (4 Heiler, 4 Sniper …).
+  /// Liefert einen Abzug und die Gründe.
+  ({double wert, List<String> gruende}) harmonie(List<Held> t, Modus m) {
+    final zaehler = <String, int>{};
+    for (final h in t) {
+      final r = hauptRolle(h);
+      zaehler[r] = (zaehler[r] ?? 0) + 1;
+    }
+    final grenzen = switch (m) {
+      Modus.verteidigung => {'heiler': 1, 'sniper': 2, 'flaeche': 3, 'tank': 1, 'unterstuetzer': 3, 'sonstiges': 1},
+      Modus.titan => {'heiler': 1, 'sniper': 3, 'flaeche': 2, 'tank': 1, 'unterstuetzer': 3, 'sonstiges': 1},
+      _ => {'heiler': 2, 'sniper': 2, 'flaeche': 3, 'tank': 1, 'unterstuetzer': 3, 'sonstiges': 1},
+    };
+    var wert = 0.0;
+    final gruende = <String>[];
+    zaehler.forEach((r, n) {
+      final zuViel = n - (grenzen[r] ?? 2);
+      if (zuViel > 0) {
+        wert -= 0.09 * zuViel;
+        gruende.add(tx('$n× ${rollenName(r)} – zu viele derselben Rolle', '$n× ${rollenName(r)} – too many of one role'));
+      }
+    });
+    // Angriff braucht mindestens 2 echte Schadensquellen
+    if (m != Modus.verteidigung) {
+      final schaden = t.where((h) => h.effekte.any((e) => const ['hit_aoe', 'hit_three', 'hit_single'].contains(e))).length;
+      if (schaden < 2 && t.length >= 4) {
+        wert -= 0.08;
+        gruende.add(tx('Zu wenig Schaden im Team', 'Not enough damage in the team'));
+      }
+    }
+    // Helden ohne Aufgabe im Team
+    final zuordnung = _aufgabenWert(t, m).zuordnung;
+    final mitlaeufer = t.where((h) => !zuordnung.containsKey(h.id)).length;
+    wert -= 0.04 * mitlaeufer;
+    return (wert: wert, gruende: gruende);
+  }
+
+  double _aufgabenAnteil(List<Held> t, Modus m) {
+    final w = _aufgabenWert(t, m);
+    return w.max == 0 ? 0 : (w.wert / w.max).clamp(0.0, 1.0);
+  }
+
+  /// Stärke im Verhältnis zu den 5 stärksten Helden im Pool (0..1)
+  double _kraftAnteil(List<Held> t) {
+    final schnitt = t.map(kraft).reduce((x, y) => x + y) / t.length;
+    final bezug = _poolSpitze ?? 1500;
+    return (schnitt / bezug).clamp(0.0, 1.1).toDouble();
+  }
+
+  double? _poolSpitze;
 
   // ------------------------------------------------------------------------
   // Gegner: geschätzte Gewinnchance
@@ -260,9 +428,20 @@ class TeamBuilder {
             '$vorteil of ${t.length} heroes strong against the titan'));
       }
     }
+    final fuerAufgaben = m == Modus.gegner ? Modus.angriff : m;
+    schlecht.insertAll(0, harmonie(t, fuerAufgaben).gruende);
+    final zuordnung = _aufgabenWert(t, fuerAufgaben).zuordnung;
+    final aufgabenText = <String, String>{
+      for (final h in t)
+        h.id: (zuordnung[h.id] ?? const []).isEmpty ? rollenName(hauptRolle(h)) : zuordnung[h.id]!.join(' · '),
+    };
     final helden = m == Modus.verteidigung ? aufstellen(t) : t;
     return TeamVorschlag(helden, teamWert(t, m, titanFarbe: titanFarbe, gegner: gegner),
-        chance: ch, staerken: gut, schwaechen: schlecht);
+        chance: ch,
+        staerken: gut,
+        schwaechen: schlecht,
+        aufgaben: aufgabenText,
+        truppen: truppenZuteilen(helden, fuerAufgaben));
   }
 
   static String _bausteinName(String k) => Sprache.en
@@ -357,7 +536,21 @@ class TeamBuilder {
 
     final bewertet = {for (final h in liste) h: einzel(h)};
     liste.sort((x, y) => bewertet[y]!.compareTo(bewertet[x]!));
-    return liste.take(45).toList();
+    _poolSpitze = () {
+      final k = liste.map(kraft).toList()..sort((x, y) => y.compareTo(x));
+      final top = k.take(5).toList();
+      return top.isEmpty ? 1500.0 : top.reduce((x, y) => x + y) / top.length;
+    }();
+    // Die 30 besten insgesamt plus je Aufgabe die 6 besten Anbieter – so fehlt kein Spezialist
+    final auswahl = <Held>{...liste.take(30)};
+    final fuerAufgaben = m == Modus.gegner ? Modus.angriff : m;
+    for (final auf in aufgaben(fuerAufgaben)) {
+      final anbieter = liste.where((h) => auf.effekte.any(h.effekte.contains)).toList()
+        ..sort((x, y) => (kraft(y) * tempoWert(y.tempoId)).compareTo(kraft(x) * tempoWert(x.tempoId)));
+      auswahl.addAll(anbieter.take(6));
+    }
+    final out = auswahl.toList()..sort((x, y) => bewertet[y]!.compareTo(bewertet[x]!));
+    return out;
   }
 
   List<Held> _suche(List<Held> kandidaten, List<Held> start, double Function(List<Held>) wert) {
@@ -396,4 +589,13 @@ class TeamBuilder {
     }
     return team;
   }
+}
+
+class Aufgabe {
+  final String key;
+  final String name;
+  final List<String> effekte;
+  final double gewicht;
+  final int anzahl; // wie viele Helden für diese Aufgabe sinnvoll sind
+  const Aufgabe(this.key, this.name, this.effekte, this.gewicht, this.anzahl);
 }

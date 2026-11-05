@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import '../daten/datenbank.dart';
 import '../daten/sprache.dart';
 import '../daten/team_builder.dart';
+import '../daten/truppen.dart';
+import '../daten/truppen_besitz.dart';
 import 'held_detail.dart';
 import 'team_check.dart';
 import 'widgets.dart';
@@ -32,6 +34,15 @@ class TeamKarte extends StatelessWidget {
         tx('Flügel', 'Wing'),
         tx('Flanke', 'Flank'),
       ];
+
+  /// "(10 → 9 Steine)", wenn die Truppe eine Mana-Schwelle knackt
+  String _steine(Held h, EigeneTruppe tr) {
+    final w = truppenVon(db);
+    final ohne = w.steine(h, 0);
+    final mit = w.steine(h, tr.manaProzent(w));
+    if (ohne == null || mit == null || mit == ohne) return '';
+    return tx(' ($ohne → $mit Steine)', ' ($ohne → $mit tiles)');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -71,10 +82,37 @@ class TeamKarte extends StatelessWidget {
                         style: t.textTheme.labelSmall, overflow: TextOverflow.ellipsis, maxLines: 1),
                     if (positionen && v.helden.length == 5)
                       Text(_pos[i], style: t.textTheme.labelSmall?.copyWith(color: t.colorScheme.primary)),
+                    if (v.truppen[v.helden[i].id] != null)
+                      Container(
+                        margin: const EdgeInsets.only(top: 2),
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(6),
+                          color: elementFarbe(v.helden[i].element).withAlpha(60),
+                        ),
+                        child: Text(v.truppen[v.helden[i].id]!.kurz(truppenVon(db)),
+                            style: t.textTheme.labelSmall, maxLines: 1, overflow: TextOverflow.ellipsis),
+                      ),
                   ]),
                 ),
               ),
           ]),
+          if (v.aufgaben.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            for (final h in v.helden)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 2),
+                child: Text.rich(TextSpan(children: [
+                  TextSpan(text: '${h.nameL}: ', style: const TextStyle(fontWeight: FontWeight.bold)),
+                  TextSpan(text: v.aufgaben[h.id] ?? ''),
+                  if (v.truppen[h.id] != null)
+                    TextSpan(
+                        text: '  ·  ${v.truppen[h.id]!.typName(truppenVon(db))} ${v.truppen[h.id]!.level}'
+                            '${_steine(h, v.truppen[h.id]!)}',
+                        style: t.textTheme.bodySmall),
+                ]), style: t.textTheme.bodySmall),
+              ),
+          ],
           const SizedBox(height: 10),
           for (final s in v.staerken.take(6))
             Padding(
@@ -101,7 +139,7 @@ class TeamKarte extends StatelessWidget {
               label: Text(tx('Im Team-Check öffnen', 'Open in team check')),
               onPressed: () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => TeamCheck(db: db, start: v.helden)),
+                MaterialPageRoute(builder: (_) => TeamCheck(db: db, start: v.helden, startTruppen: v.truppen)),
               ),
             ),
           ),

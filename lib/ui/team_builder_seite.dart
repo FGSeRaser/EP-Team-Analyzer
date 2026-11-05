@@ -7,12 +7,13 @@ import '../daten/analyse.dart';
 import '../daten/datenbank.dart';
 import '../daten/sprache.dart';
 import '../daten/team_builder.dart';
+import '../daten/truppen_besitz.dart';
 import 'sammlung_scope.dart';
 import 'team_karte.dart';
 import 'widgets.dart';
 
 /// Eigene Helden + ihre Stärke (Spiel-Stärke, sonst berechnet)
-({List<Held> pool, Map<String, int> kraft}) eigenerPool(BuildContext context, Datenbank db) {
+({List<Held> pool, Map<String, int> kraft, List<EigeneTruppe> truppen}) eigenerPool(BuildContext context, Datenbank db) {
   final sammlung = SammlungScope.lesen(context);
   final pool = <Held>[];
   final kraft = <String, int>{};
@@ -21,7 +22,7 @@ import 'widgets.dart';
     pool.add(e.key);
     kraft[e.key.id] = sammlung.staerke(db, e.key, e.value);
   }
-  return (pool: pool, kraft: kraft);
+  return (pool: pool, kraft: kraft, truppen: sammlung.truppen);
 }
 
 class TeamBuilderSeite extends StatefulWidget {
@@ -46,7 +47,7 @@ class _TeamBuilderSeiteState extends State<TeamBuilderSeite> {
       _ergebnis = null;
     });
     await Future<void>.delayed(const Duration(milliseconds: 50)); // Ladeanzeige zeigen
-    final b = TeamBuilder(Analyse(widget.db), kraftVon: p.kraft);
+    final b = TeamBuilder(Analyse(widget.db), kraftVon: p.kraft, truppenInventar: p.truppen);
     final erg = _modus == Modus.krieg
         ? b.krieg(p.pool)
         : b.baue(p.pool, _modus, titanFarbe: _modus == Modus.titan ? _titanFarbe : null);

@@ -11,6 +11,8 @@
 import 'analyse.dart';
 import 'datenbank.dart';
 import 'sprache.dart';
+import 'team_builder.dart';
+import 'truppen_besitz.dart';
 
 class TruppenPassiv {
   final String key, de, en;
@@ -184,6 +186,64 @@ class TruppenWissen {
       MapEntry(tx('Verteidigung', 'Defense'), verteidigung),
       MapEntry('Titan', titan),
     ];
+  }
+
+  /// Wie gut passt eine eigene Truppe zu diesem Helden im Modus? (höher = besser)
+  double truppenWert(EigeneTruppe t, Held h, Modus m, Map<String, int> rollen) {
+    final angriff = m == Modus.angriff || m == Modus.krieg || m == Modus.gegner;
+    // Mana hilft langsamen Helden viel, sehr schnellen kaum
+    final manaGewicht = switch (h.tempoId) {
+      'very_slow' || 'slow' => 1.0,
+      'average' => 0.85,
+      'fast' => 0.6,
+      'very_fast' => 0.35,
+      _ => 0.8,
+    };
+    var w = 0.0;
+    switch (t.typ) {
+      case 'leg':
+        final leg = legendaer.where((l) => l.name == t.legName).toList();
+        if (leg.isNotEmpty) {
+          final l = leg.first;
+          w += l.klasse1 == h.klasseKey ? 22 : (l.klasse2 == h.klasseKey ? 16 : 6);
+          final p = passive[l.passiv];
+          var rolle = 0;
+          for (final r in p?.rollen ?? const <String>[]) {
+            final v = rollen[r] ?? 0;
+            if (v > rolle) rolle = v;
+          }
+          w += rolle / 10;
+        } else {
+          w += 10;
+        }
+        w += t.level / 4;
+      case 'normal':
+        w += t.sterne * 2 + t.level / 6;
+      default:
+        w += 8 + t.level / 6;
+        if (angriff) {
+          w += t.manaProzent(this) * manaGewicht;
+          w += t.umgehenProzent(this) * 0.5; // Styx/Ninja umgehen Boni
+          if (t.typ == 'ninja') w += 3;
+        } else {
+          w += t.kritProzent(this) * 1.2;
+          if (t.typ == 'krit') w += 6;
+          if (m == Modus.titan && t.typ == 'ninja') w += 5;
+          if (m == Modus.verteidigung) w += t.manaProzent(this) * 0.3 * manaGewicht;
+        }
+    }
+    return w;
+  }
+
+  /// Steine bis zur Spezialfähigkeit mit diesem Mana-Bonus (null, wenn unbekannt)
+  int? steine(Held h, int manaProzent) {
+    final s = manaSchwellen[h.tempoId];
+    if (s == null || s.isEmpty) return null;
+    var steine = s.first[1];
+    for (final e in s) {
+      if (manaProzent >= e[0]) steine = e[1];
+    }
+    return steine;
   }
 
   /// Mana-Schwellen-Hinweis: wie viel Mana-Bonus für einen Stein weniger

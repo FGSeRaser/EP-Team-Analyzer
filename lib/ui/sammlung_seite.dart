@@ -13,6 +13,7 @@ import 'eingabe_screenshot.dart';
 import 'eingabe_text.dart';
 import 'held_detail.dart';
 import 'helden_liste.dart';
+import 'meine_truppen_seite.dart';
 import 'sammlung_scope.dart';
 import 'widgets.dart';
 
@@ -142,6 +143,11 @@ class _SammlungSeiteState extends State<SammlungSeite> {
       appBar: AppBar(
         title: Text(tx('Meine Helden', 'My heroes')),
         actions: [
+          TextButton.icon(
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => MeineTruppenSeite(db: widget.db))),
+            icon: const Icon(Icons.shield),
+            label: Text('${tx('Truppen', 'Troops')} (${sammlung.truppen.length})'),
+          ),
           PopupMenuButton<String>(
             onSelected: (a) => _menue(a, sammlung),
             itemBuilder: (_) => [

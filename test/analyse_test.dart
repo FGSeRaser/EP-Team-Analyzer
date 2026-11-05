@@ -13,6 +13,7 @@ import 'package:ep_team_analyzer/erkennung/erkennung.dart';
 import 'package:ep_team_analyzer/erkennung/kartentext.dart';
 import 'package:ep_team_analyzer/daten/team_builder.dart';
 import 'package:ep_team_analyzer/daten/truppen.dart';
+import 'package:ep_team_analyzer/daten/truppen_besitz.dart';
 
 Datenbank _lade() {
   final j = jsonDecode(File('assets/data/helden.json').readAsStringSync()) as Map<String, dynamic>;
@@ -168,5 +169,40 @@ void main() {
     final b = Besitz(id: athena.id, stufe: 4, level: 90, lb: 2, talent: 25, staerke: 1751);
     expect(Sammlung().kostuemStufenAusStaerke(db, athena, b), 8);
     expect(db.kostuemeVon(athena).length, 2);
+  });
+
+  test('Team-Builder: ausgewogene Teams – nie mehr als 2 Heiler oder 2 Sniper im Angriff', () {
+    final pool = db.helden.where((h) => !h.kommend && h.sterne == 5 && h.kostuemVon == null).take(150).toList();
+    final b = TeamBuilder(Analyse(db));
+    for (final v in b.baue(pool, Modus.angriff)) {
+      final rollen = v.helden.map(TeamBuilder.hauptRolle).toList();
+      expect(rollen.where((r) => r == 'heiler').length, lessThanOrEqualTo(2), reason: rollen.join(','));
+      expect(rollen.where((r) => r == 'sniper').length, lessThanOrEqualTo(2), reason: rollen.join(','));
+      expect(v.aufgaben.length, 5);
+    }
+  });
+
+  test('Truppen-Zuteilung: Farbe passt, jede Truppe einmal pro Team', () {
+    final pool = db.helden.where((h) => !h.kommend && h.sterne == 5 && h.kostuemVon == null).take(60).toList();
+    final inventar = [
+      for (final f in ['rot', 'blau', 'gruen', 'gelb', 'lila']) ...[
+        EigeneTruppe(id: 'm$f', farbe: f, typ: 'magie', level: 25),
+        EigeneTruppe(id: 'k$f', farbe: f, typ: 'krit', level: 30),
+      ],
+    ];
+    final b = TeamBuilder(Analyse(db), truppenInventar: inventar);
+    final v = b.baue(pool, Modus.angriff).first;
+    final ids = <String>[];
+    for (final h in v.helden) {
+      final tr = v.truppen[h.id];
+      if (tr != null) {
+        expect(tr.farbe, h.element);
+        ids.add(tr.id);
+      }
+    }
+    expect(ids.toSet().length, ids.length);
+    final w = truppenVon(db);
+    expect(EigeneTruppe(id: 'x', farbe: 'rot', typ: 'magie', level: 23).manaProzent(w), 17);
+    expect(EigeneTruppe(id: 'y', farbe: 'rot', typ: 'krit', level: 30).kritProzent(w), 13);
   });
 }

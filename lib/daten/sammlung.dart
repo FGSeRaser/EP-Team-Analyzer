@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'datenbank.dart';
+import 'truppen_besitz.dart';
 import 'werte.dart';
 
 /// Ein Held, den der Spieler besitzt
@@ -106,6 +107,27 @@ class Sammlung extends ChangeNotifier {
 
   /// Kostüme je Basis-Held: Kostüm-ID -> erreichte Aufstiegsstufe (0 = nicht im Besitz)
   final Map<String, Map<String, int>> _kostueme = {};
+
+  /// Eigene Truppen aus der Kaserne
+  final List<EigeneTruppe> _truppen = [];
+  List<EigeneTruppe> get truppen => List.unmodifiable(_truppen);
+
+  Future<void> truppeSpeichern(EigeneTruppe t) async {
+    final i = _truppen.indexWhere((x) => x.id == t.id);
+    if (i >= 0) {
+      _truppen[i] = t;
+    } else {
+      _truppen.add(t);
+    }
+    await _speichern();
+    notifyListeners();
+  }
+
+  Future<void> truppeEntfernen(String id) async {
+    _truppen.removeWhere((x) => x.id == id);
+    await _speichern();
+    notifyListeners();
+  }
 
   Iterable<Besitz> get alle => _helden.values;
   int get anzahlVerschiedene => _helden.length;
@@ -260,6 +282,7 @@ class Sammlung extends ChangeNotifier {
   Future<void> leeren() async {
     _helden.clear();
     _kostueme.clear();
+    _truppen.clear();
     await _speichern();
     notifyListeners();
   }
@@ -269,6 +292,7 @@ class Sammlung extends ChangeNotifier {
         'version': 1,
         'helden': [for (final b in _helden.values) b.toJson()],
         if (_kostueme.isNotEmpty) 'kostueme': _kostueme,
+        if (_truppen.isNotEmpty) 'truppen': [for (final t in _truppen) t.toJson()],
       });
 
   /// Liefert die Anzahl importierter Helden
@@ -285,6 +309,14 @@ class Sammlung extends ChangeNotifier {
     if (ersetzen) {
       _helden.clear();
       _kostueme.clear();
+      _truppen.clear();
+    }
+    if (j is Map && j['truppen'] is List) {
+      for (final x in j['truppen'] as List) {
+        final t = EigeneTruppe.ausJson(Map<String, dynamic>.from(x as Map));
+        _truppen.removeWhere((y) => y.id == t.id);
+        _truppen.add(t);
+      }
     }
     if (j is Map && j['kostueme'] is Map) {
       (j['kostueme'] as Map).forEach((basis, m) {
