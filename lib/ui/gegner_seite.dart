@@ -6,10 +6,13 @@ import 'package:image_picker/image_picker.dart';
 
 import '../daten/analyse.dart';
 import '../daten/datenbank.dart';
+import '../daten/gegner_stand.dart';
+import '../daten/werte.dart';
 import '../daten/sprache.dart';
 import '../daten/team_builder.dart';
 import '../erkennung/kartentext.dart';
 import '../erkennung/screenshot.dart';
+import 'gegner_held_sheet.dart';
 import 'held_detail.dart';
 import 'helden_liste.dart';
 import 'team_builder_seite.dart';
@@ -26,7 +29,7 @@ class GegnerSeite extends StatefulWidget {
 
 class _GegnerSeiteState extends State<GegnerSeite> {
   final List<Held?> _gegner = List<Held?>.filled(5, null);
-  final Map<int, int> _staerke = {}; // Platz -> Stärke aus Screenshot
+  final Map<int, GegnerStand> _stand = {}; // Platz -> Ausbau des Gegners (eingestellt oder aus Screenshot)
   bool _laeuft = false;
   String? _meldung;
   List<TeamVorschlag>? _ergebnis;
@@ -47,10 +50,28 @@ class _GegnerSeiteState extends State<GegnerSeite> {
     if (h != null) {
       setState(() {
         _gegner[i] = h;
-        _staerke.remove(i);
+        _stand.remove(i);
         _ergebnis = null;
       });
+      await _bearbeiten(i);
     }
+  }
+
+  /// Kostüm, Level, LB, Talent des Gegners einstellen
+  Future<void> _bearbeiten(int i) async {
+    final h = _gegner[i];
+    if (h == null) return;
+    final erg = await gegnerBearbeiten(context, widget.db, h, _stand[i] ?? GegnerStand.standard(h));
+    if (erg == null || !mounted) return;
+    if (erg.wechseln) {
+      await _waehle(i);
+      return;
+    }
+    setState(() {
+      if (erg.held != null) _gegner[i] = erg.held;
+      if (erg.stand != null) _stand[i] = erg.stand!;
+      _ergebnis = null;
+    });
   }
 
   Future<void> _screenshot() async {
@@ -78,13 +99,25 @@ class _GegnerSeiteState extends State<GegnerSeite> {
       setState(() {
         for (var i = 0; i < 5; i++) {
           _gegner[i] = null;
-          _staerke.remove(i);
+          _stand.remove(i);
         }
         for (var i = 0; i < beste.length; i++) {
           final t = beste[i];
-          _gegner[i] = widget.db.nachId[t.kandidaten.first.id];
+          final g = widget.db.nachId[t.kandidaten.first.id];
+          _gegner[i] = g;
           final k = kartenTextLesen(t.zelle, erg.raster, texte);
-          if (k.staerke != null) _staerke[i] = k.staerke!;
+          if (g != null && (k.staerke != null || k.level != null)) {
+            final st = GegnerStand.standard(g)..staerke = k.staerke;
+            if (k.level != null) {
+              final lv = standAusLevel(g.sterne, k.level!);
+              st
+                ..stufe = lv.stufe
+                ..level = lv.level
+                ..lb = lv.lb;
+            }
+            if (k.talent != null) st.talent = k.talent!;
+            _stand[i] = st;
+          }
         }
         _meldung = beste.length < 5
             ? tx('Nur ${beste.length} Helden erkannt – fehlende bitte antippen und wählen.',
@@ -108,8 +141,8 @@ class _GegnerSeiteState extends State<GegnerSeite> {
     });
     await Future<void>.delayed(const Duration(milliseconds: 50));
     final gegnerKraft = <String, int>{
-      for (final e in _staerke.entries)
-        if (_gegner[e.key] != null) _gegner[e.key]!.id: e.value,
+      for (final e in _stand.entries)
+        if (_gegner[e.key] != null) _gegner[e.key]!.id: e.value.kraft(widget.db, _gegner[e.key]!),
     };
     final b = TeamBuilder(Analyse(widget.db), kraftVon: p.kraft, gegnerKraft: gegnerKraft, truppenInventar: p.truppen);
     final erg = b.baue(p.pool, Modus.gegner, gegner: gegner);
@@ -136,8 +169,8 @@ class _GegnerSeiteState extends State<GegnerSeite> {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
             child: Text(tx(
-                'Gegnerteam per Screenshot einlesen oder die 5 Plätze antippen. Danach sucht die App aus deinen Helden die Teams mit der besten Chance.',
-                'Load the enemy team from a screenshot or tap the 5 slots. Then the app finds your teams with the best chance.')),
+                'Gegnerteam per Screenshot einlesen oder die 5 Plätze antippen. Tippst du einen Gegner an, stellst du Kostüm, Stufe, Level, Limit Break und Talent so ein, wie er sie hat. Danach sucht die App aus deinen Helden die Teams mit der besten Chance – und sagt dir, wie du sie spielst.',
+                'Load the enemy team from a screenshot or tap the 5 slots. Tap an enemy to set costume, ascension, level, limit break and talent like they have it. Then the app finds your teams with the best chance – and tells you how to play them.')),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -155,7 +188,7 @@ class _GegnerSeiteState extends State<GegnerSeite> {
               for (var i = 0; i < 5; i++)
                 Expanded(
                   child: GestureDetector(
-                    onTap: () => _waehle(i),
+                    onTap: () => _gegner[i] == null ? _waehle(i) : _bearbeiten(i),
                     onLongPress: _gegner[i] == null
                         ? null
                         : () => Navigator.push(context,
@@ -175,7 +208,13 @@ class _GegnerSeiteState extends State<GegnerSeite> {
                       const SizedBox(height: 3),
                       Text(_gegner[i]?.nameL ?? _pos[i],
                           style: t.textTheme.labelSmall, maxLines: 1, overflow: TextOverflow.ellipsis),
-                      if (_staerke[i] != null) Text('${_staerke[i]}', style: t.textTheme.labelSmall),
+                      if (_gegner[i] != null && _stand[i] != null) ...[
+                        Text('${_stand[i]!.kraft(widget.db, _gegner[i]!)}', style: t.textTheme.labelSmall),
+                        if (_stand[i]!.kurz(_gegner[i]!).isNotEmpty)
+                          Text(_stand[i]!.kurz(_gegner[i]!),
+                              style: t.textTheme.labelSmall?.copyWith(fontSize: 9), maxLines: 1, overflow: TextOverflow.ellipsis),
+                      ] else if (_gegner[i] != null)
+                        Text(tx('Standard', 'Default'), style: t.textTheme.labelSmall?.copyWith(fontSize: 9, color: t.disabledColor)),
                       Text(_pos[i], style: t.textTheme.labelSmall?.copyWith(color: t.colorScheme.primary)),
                     ]),
                   ),

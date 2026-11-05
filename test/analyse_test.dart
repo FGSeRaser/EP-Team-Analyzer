@@ -12,6 +12,9 @@ import 'package:ep_team_analyzer/daten/sammlung.dart';
 import 'package:ep_team_analyzer/erkennung/erkennung.dart';
 import 'package:ep_team_analyzer/erkennung/kartentext.dart';
 import 'package:ep_team_analyzer/erkennung/truppen_text.dart';
+import 'package:ep_team_analyzer/erkennung/titan_text.dart';
+import 'package:ep_team_analyzer/daten/titan.dart';
+import 'package:ep_team_analyzer/daten/gegner_stand.dart';
 import 'dart:math' as math;
 import 'dart:typed_data';
 import 'package:ep_team_analyzer/daten/team_builder.dart';
@@ -258,5 +261,37 @@ void main() {
       rgba[i * 4 + 3] = 255;
     }
     expect(farbeImBereich(Bild(rgba, 20, 20), 0, 0, 19, 19), 'blau');
+  });
+
+  test('Titan: Spielplan mit Farbe, Schwachpunkt und Zünd-Reihenfolge', () {
+    final pool = db.helden.where((h) => !h.kommend && h.sterne == 5 && h.kostuemVon == null).take(150).toList();
+    final ti = TitanInfo(farbe: 'gruen', sterne: 12, eigenschaften: {'reflekt'});
+    final v = TeamBuilder(Analyse(db), titan: ti).baue(pool, Modus.titan, titanFarbe: 'gruen');
+    expect(v, isNotEmpty);
+    final plan = v.first.plan.join('\n');
+    expect(plan, contains('Schwachpunkt'));
+    expect(plan, contains('reflektiert'));
+    expect(v.first.plan.first, startsWith('Zünd-Reihenfolge'));
+    // Mehrheit mit Farbvorteil (rot gegen grün)
+    expect(v.first.helden.where((h) => h.element == 'rot').length, greaterThanOrEqualTo(3));
+  });
+
+  test('Gegner: Spielplan nennt Ziel und Gegner-Stand rechnet Kostüme ein', () {
+    final pool = db.helden.where((h) => !h.kommend && h.sterne == 5 && h.kostuemVon == null).take(100).toList();
+    final gegner = db.helden.where((h) => !h.kommend && h.sterne == 5 && h.kostuemVon == null).skip(200).take(5).toList();
+    final v = TeamBuilder(Analyse(db)).baue(pool, Modus.gegner, gegner: gegner);
+    expect(v.first.plan.any((p) => p.startsWith('Zuerst ausschalten')), isTrue);
+    final athena = db.nachId[db.nachId['ice_god_athena_costume_cute']!.basisId]!;
+    final ohne = GegnerStand.standard(athena);
+    final mit = GegnerStand.standard(athena)..kost = {for (final k in db.kostuemeVon(athena)) k.id: db.kostuemStufen(athena)};
+    expect(mit.kraft(db, athena), greaterThan(ohne.kraft(db, athena)));
+    expect((GegnerStand.standard(athena)..staerke = 1234).kraft(db, athena), 1234);
+  });
+
+  test('Titan aus Screenshot-Text', () {
+    final e = titanAusText(const [TextZeile('Titan 11★', 0, 0, 50, 10), TextZeile('Reflektiert Schaden', 0, 20, 90, 30), TextZeile('Natur', 0, 40, 30, 50)]);
+    expect(e.sterne, 11);
+    expect(e.farbe, 'gruen');
+    expect(e.eigenschaften, contains('reflekt'));
   });
 }

@@ -10,6 +10,7 @@ import 'dart:math' as math;
 import 'analyse.dart';
 import 'datenbank.dart';
 import 'sprache.dart';
+import 'titan.dart';
 import 'truppen.dart';
 import 'truppen_besitz.dart';
 
@@ -60,12 +61,16 @@ class TeamVorschlag {
 
   /// Held-ID -> zugeteilte eigene Truppe (falls Truppen eingetragen)
   final Map<String, EigeneTruppe> truppen;
+
+  /// So spielt man das Team: Reihenfolge, Ziele, Tipps
+  final List<String> plan;
   const TeamVorschlag(this.helden, this.wert,
       {this.chance,
       this.staerken = const [],
       this.schwaechen = const [],
       this.aufgaben = const {},
-      this.truppen = const {}});
+      this.truppen = const {},
+      this.plan = const []});
 }
 
 class TeamBuilder {
@@ -93,7 +98,11 @@ class TeamBuilder {
       this.gegnerKraft = const {},
       this.truppenInventar = const [],
       this.zufall,
-      this.schonGezeigt = const []});
+      this.schonGezeigt = const [],
+      this.titan});
+
+  /// Titan mit Besonderheiten (für den Titan-Modus)
+  final TitanInfo? titan;
 
   final Map<String, double> _rauschen = {};
   double _rauschenVon(Held h) => zufall == null ? 0 : _rauschen.putIfAbsent(h.basisId, () => zufall!.nextDouble() * 0.10);
@@ -228,6 +237,7 @@ class TeamBuilder {
       // Farbvorteil ist beim Titan das Wichtigste (doppelter Steinschaden)
       final vorteil = t.map((h) => farbVorteil(h.element, titanFarbe)).reduce((x, y) => x + y) / t.length;
       extra += 0.35 * vorteil;
+      extra += _titanExtra(t).wert;
     }
     extra += harmonie(t, m).wert;
     extra += zusammenspiel(t, m).wert;
@@ -309,6 +319,231 @@ class TeamBuilder {
     final mitlaeufer = t.where((h) => !zuordnung.containsKey(h.id)).length;
     wert -= 0.04 * mitlaeufer;
     return (wert: wert, gruende: gruende);
+  }
+
+  /// Titan-Besonderheiten: Farb-Bonus, Reflektieren, Buffs/Debuffs entfernen, Titanjäger
+  ({double wert, List<String> gut, List<String> schlecht}) _titanExtra(List<Held> t) {
+    final ti = titan;
+    var w = 0.0;
+    final gut = <String>[], schlecht = <String>[];
+    if (t.isEmpty) return (wert: 0.0, gut: gut, schlecht: schlecht);
+    final jaeger = t.where((h) => h.familie == 'titan_hunter').toList();
+    if (jaeger.isNotEmpty) {
+      w += 0.03 * jaeger.length;
+      gut.add(tx('${jaeger.map((h) => h.nameL).join(', ')}: Titanjäger – mehr Schaden gegen Titanen',
+          '${jaeger.map((h) => h.nameL).join(', ')}: titan hunter – more damage vs titans'));
+    }
+    if (ti == null) return (wert: w, gut: gut, schlecht: schlecht);
+    final heilt = _hat(t, _heilung);
+    final schuetzt = _hat(t, _schutz);
+    if (ti.hat('bonus') && ti.bonusFarbe != null) {
+      final n = t.where((h) => h.element == ti.bonusFarbe).length;
+      w += 0.15 * n / t.length;
+      if (n > 0) {
+        gut.add(tx('$n Helden in der Bonus-Farbe ${_farbName(ti.bonusFarbe!)}', '$n heroes in the bonus color ${_farbName(ti.bonusFarbe!)}'));
+      }
+    }
+    if (ti.hat('reflekt') || ti.hat('hart') || ti.selten || ti.sterne >= 11) {
+      final faktor = (ti.hat('reflekt') ? 1.0 : 0.0) + (ti.hat('hart') ? 1.0 : 0.0) + (ti.selten || ti.sterne >= 11 ? 0.5 : 0.0);
+      if (heilt) {
+        w += 0.04 * faktor;
+      } else {
+        w -= 0.05 * faktor;
+        schlecht.add(tx('Keine Heilung – gegen diesen Titan riskant', 'No healing – risky against this titan'));
+      }
+      if (schuetzt) w += 0.02 * faktor;
+    }
+    final buffer = t.where((h) => h.effekte.any(const ['atk_up', 'crit_up', 'elem_dmg_up'].contains)).toList();
+    final debuffer = t.where((h) => h.effekte.any(_vertRunter.contains)).toList();
+    if (ti.hat('bannt')) {
+      if (debuffer.isNotEmpty) w += 0.05;
+      w -= 0.02 * buffer.where((h) => !debuffer.contains(h)).length;
+      if (debuffer.isEmpty) {
+        schlecht.add(tx('Titan entfernt Buffs, aber niemand senkt seine Verteidigung', 'Titan removes buffs, but nobody lowers its defense'));
+      }
+    }
+    if (ti.hat('reinigt')) {
+      if (buffer.isNotEmpty) w += 0.05;
+      w -= 0.02 * debuffer.where((h) => !buffer.contains(h)).length;
+      if (buffer.isEmpty) {
+        schlecht.add(tx('Titan entfernt Debuffs, aber niemand verstärkt den eigenen Angriff', 'Titan removes debuffs, but nobody boosts your attack'));
+      }
+    }
+    return (wert: w, gut: gut, schlecht: schlecht);
+  }
+
+  // ------------------------------------------------------------------------
+  // Spielplan: in welcher Reihenfolge zünden, wen zuerst angreifen, Tipps
+  // ------------------------------------------------------------------------
+
+  /// Reihenfolge zum Zünden der Spezialfähigkeiten
+  List<Held> zuendReihenfolge(List<Held> t, Modus m) {
+    int prio(Held h) {
+      final fx = h.effekte;
+      if (m != Modus.titan && fx.any(_manaKontrolle.contains)) return 0;
+      if (fx.any(_vertRunter.contains)) return 1;
+      if (fx.any(const ['atk_up', 'crit_up', 'elem_dmg_up', 'mana_up', 'mana_gain'].contains)) return 2;
+      if (fx.any(_treffer.contains) || fx.any(const ['dot', 'dot_poison', 'dot_burn', 'dot_bleed'].contains)) return 3;
+      if (fx.any(_heilung.contains) || fx.any(_reinigen.contains)) return 4;
+      return 3;
+    }
+
+    final out = [...t];
+    out.sort((x, y) {
+      final p = prio(x).compareTo(prio(y));
+      if (p != 0) return p;
+      // Bei Schadenshelden: der stärkste zuletzt (er profitiert von allen Buffs)
+      if (prio(x) == 3) return kraft(x).compareTo(kraft(y));
+      return tempoWert(y.tempoId).compareTo(tempoWert(x.tempoId));
+    });
+    return out;
+  }
+
+  String _warum(Held h, Modus m) {
+    final fx = h.effekte;
+    if (m != Modus.titan && fx.any(_manaKontrolle.contains)) return tx('bremst das Mana der Gegner', 'slows enemy mana');
+    if (fx.any(_vertRunter.contains)) return tx('senkt die Verteidigung', 'lowers defense');
+    if (fx.contains('atk_up')) return tx('erhöht euren Angriff', 'raises your attack');
+    if (fx.contains('crit_up')) return tx('erhöht die Krit-Chance', 'raises crit chance');
+    if (fx.contains('elem_dmg_up')) return tx('verstärkt den Elementschaden', 'boosts element damage');
+    if (fx.any(const ['mana_up', 'mana_gain'].contains)) return tx('lädt die anderen schneller auf', 'charges the others faster');
+    if (fx.any(_flaeche.contains)) return tx('Flächenschaden', 'AoE damage');
+    if (fx.any(_treffer.contains)) return tx('Schaden', 'damage');
+    if (fx.any(_heilung.contains)) return tx('heilt', 'heals');
+    if (fx.any(_reinigen.contains)) return tx('reinigt', 'cleanses');
+    return rollenName(hauptRolle(h));
+  }
+
+  List<String> spielplan(List<Held> t, Modus m, {List<Held> gegner = const []}) {
+    if (t.isEmpty) return const [];
+    final plan = <String>[];
+    if (m == Modus.verteidigung) {
+      if (t.length == 5) {
+        plan.add(tx('Mitte (Tank): ${t[2].nameL} – bekommt die meisten Steine ab, deshalb der robusteste Held.',
+            'Center (tank): ${t[2].nameL} – takes most tiles, so the sturdiest hero goes here.'));
+        plan.add(tx('Flanken außen: ${t[0].nameL} und ${t[4].nameL} – werden seltener getroffen und laden ihre Spezialfähigkeit oft zuerst.',
+            'Outer flanks: ${t[0].nameL} and ${t[4].nameL} – get hit less and often charge their special first.'));
+        plan.add(tx('Flügel: ${t[1].nameL} und ${t[3].nameL} – stützen den Tank.', 'Wings: ${t[1].nameL} and ${t[3].nameL} – support the tank.'));
+      }
+      return plan;
+    }
+    final reihe = zuendReihenfolge(t, m);
+    plan.add(tx('Zünd-Reihenfolge: ${reihe.map((h) => '${h.nameL} (${_warum(h, m)})').join(' → ')}',
+        'Firing order: ${reihe.map((h) => '${h.nameL} (${_warum(h, m)})').join(' → ')}'));
+    final heiler = t.where((h) => h.effekte.any(_heilung.contains)).toList();
+    final reiniger = t.where((h) => h.effekte.any(_reinigen.contains)).toList();
+    final banner = t.where((h) => h.effekte.any(_bannen.contains)).toList();
+
+    if (m == Modus.titan) {
+      final ti = titan;
+      final farbe = ti?.farbe;
+      if (farbe != null) {
+        final stark = starkGegen(farbe);
+        final n = t.where((h) => farbVorteil(h.element, farbe) == 1).length;
+        if (stark != null) {
+          plan.add(tx('Farbe: ${_farbName(stark)} ist stark gegen den ${_farbName(farbe)}-Titan (doppelter Steinschaden) – $n von ${t.length} Helden haben den Vorteil. Diese Steine bevorzugt kombinieren.',
+              'Color: ${_farbName(stark)} is strong against the ${_farbName(farbe)} titan (double tile damage) – $n of ${t.length} heroes have it. Prefer matching these tiles.'));
+        }
+      }
+      plan.add(tx('Auf den Schwachpunkt zielen: Trifft man ihn, ist der Titan betäubt und greift nicht an – genau dann die großen Spezialfähigkeiten zünden.',
+          'Aim for the weak spot: a hit stuns the titan so it skips its attack – fire the big specials right then.'));
+      if (t.any((h) => h.effekte.any(_vertRunter.contains)) || t.any((h) => h.effekte.contains('atk_up'))) {
+        plan.add(tx('Buffs und „Verteidigung runter“ halten nur wenige Züge – die Schadenshelden direkt danach zünden.',
+            'Buffs and "defense down" last only a few turns – fire the damage heroes right after.'));
+      } else {
+        plan.add(tx('Niemand senkt die Verteidigung oder erhöht den Angriff – Kampfgegenstände wie Banner (z. B. Titan-Banner) mitnehmen.',
+            'Nobody lowers defense or raises attack – bring battle items like banners (e.g. Titan Banner).'));
+      }
+      if (heiler.isNotEmpty) {
+        plan.add(tx('${heiler.first.nameL} heilt: erst zünden, nachdem der Titan zugeschlagen hat – nicht auf Vorrat.',
+            '${heiler.first.nameL} heals: fire after the titan has hit – not in advance.'));
+      }
+      if (ti != null) {
+        if (ti.hat('reflekt')) {
+          plan.add(tx('Titan reflektiert Schaden: nicht alle Spezialfähigkeiten auf einmal, Heilung bereithalten.',
+              'Titan reflects damage: don\'t fire every special at once, keep healing ready.'));
+        }
+        if (ti.hat('bannt')) {
+          plan.add(tx('Titan entfernt Buffs: „Angriff hoch“ erst unmittelbar vor dem Schaden zünden.',
+              'Titan removes buffs: fire "attack up" right before the damage.'));
+        }
+        if (ti.hat('reinigt')) {
+          plan.add(tx('Titan entfernt Debuffs: „Verteidigung runter“ direkt vor den Schadenshelden.',
+              'Titan removes debuffs: fire "defense down" right before the damage heroes.'));
+        }
+        if (ti.hat('bonus') && ti.bonusFarbe != null) {
+          plan.add(tx('Farb-Bonus: Helden in ${_farbName(ti.bonusFarbe!)} machen mehr Schaden – deren Steine nicht verschwenden.',
+              'Color bonus: ${_farbName(ti.bonusFarbe!)} heroes deal more damage – don\'t waste their tiles.'));
+        }
+      }
+      plan.add(tx('Die Helden stehen im Team in dieser Reihenfolge (links → rechts), damit du beim Zünden nicht suchen musst.',
+          'The heroes are lined up in this order (left → right) so you don\'t have to search while firing.'));
+      return plan;
+    }
+
+    if (gegner.isNotEmpty) {
+      // Wen zuerst ausschalten?
+      double gefahr(Held g) {
+        final fx = g.effekte;
+        var w = 0.0;
+        if (fx.any(const ['revive', 'self_revive'].contains)) w += 3;
+        if (fx.any(_heilung.contains)) w += 2;
+        if (fx.any(_manaKontrolle.contains)) w += 1.5;
+        if (fx.any(_bannen.contains) && t.any((h) => h.effekte.any(const ['atk_up', 'def_up', 'crit_up'].contains))) w += 1.5;
+        if (fx.any(_flaeche.contains)) w += 1;
+        if (fx.contains('taunt')) w -= 1;
+        w += tempoWert(g.tempoId) * 2;
+        return w;
+      }
+
+      String grund(Held g) {
+        final fx = g.effekte;
+        final l = <String>[
+          if (fx.any(const ['revive', 'self_revive'].contains)) tx('belebt wieder', 'revives'),
+          if (fx.any(_heilung.contains)) tx('heilt', 'heals'),
+          if (fx.any(_manaKontrolle.contains)) tx('bremst euer Mana', 'slows your mana'),
+          if (fx.any(_bannen.contains)) tx('bannt eure Buffs', 'dispels your buffs'),
+          if (fx.any(_flaeche.contains)) tx('Flächenschaden', 'AoE damage'),
+          if (g.tempoId == 'fast' || g.tempoId == 'very_fast') tx('schnell', 'fast'),
+        ];
+        return l.isEmpty ? rollenName(hauptRolle(g)) : l.take(3).join(', ');
+      }
+
+      final ziele = [...gegner]..sort((x, y) => gefahr(y).compareTo(gefahr(x)));
+      plan.add(tx('Zuerst ausschalten: ${ziele.take(2).map((g) => '${g.nameL} (${grund(g)})').join(', dann ')}.',
+          'Take out first: ${ziele.take(2).map((g) => '${g.nameL} (${grund(g)})').join(', then ')}.'));
+      final tank = gegner.length >= 3 ? gegner[2] : gegner.first;
+      final gegenTank = t.where((h) => farbVorteil(h.element, tank.element) == 1).length;
+      if (gegenTank >= 3) {
+        plan.add(tx('$gegenTank Helden haben Farbvorteil gegen den Tank ${tank.nameL} – ihr könnt ihn direkt durchbrechen.',
+            '$gegenTank heroes are strong against the tank ${tank.nameL} – you can break through directly.'));
+      } else {
+        plan.add(tx('Gegen den Tank ${tank.nameL} habt ihr kaum Farbvorteil – Steine lieber unter den Flanken kombinieren (Steine treffen den Gegner über ihrer Spalte).',
+            'Little color advantage vs the tank ${tank.nameL} – match tiles under the flanks instead (tiles hit the enemy above their column).'));
+      }
+      final buffGegner = gegner.where((g) => g.effekte.any(const ['atk_up', 'def_up', 'dodge', 'dmg_reduction', 'counter'].contains)).toList();
+      if (banner.isNotEmpty && buffGegner.isNotEmpty) {
+        plan.add(tx('${banner.first.nameL} erst bannen, wenn ${buffGegner.first.nameL} seine Buffs gezündet hat.',
+            'Fire ${banner.first.nameL}\'s dispel after ${buffGegner.first.nameL} has cast its buffs.'));
+      }
+      final leidGegner = gegner.where((g) => g.effekte.any(const ['def_down', 'atk_down', 'dot', 'dot_poison', 'dot_burn', 'mana_debuff', 'acc_down'].contains)).toList();
+      if (reiniger.isNotEmpty && leidGegner.isNotEmpty) {
+        plan.add(tx('${reiniger.first.nameL} aufheben, bis ${leidGegner.first.nameL} seine Leiden verteilt hat – dann reinigen.',
+            'Save ${reiniger.first.nameL} until ${leidGegner.first.nameL} has applied its ailments – then cleanse.'));
+      }
+    } else {
+      if (reiniger.isNotEmpty) {
+        plan.add(tx('${reiniger.first.nameL} aufheben, bis ihr Leiden habt – dann reinigen.', 'Save ${reiniger.first.nameL} until you have ailments – then cleanse.'));
+      }
+      if (banner.isNotEmpty) {
+        plan.add(tx('${banner.first.nameL} zünden, wenn der Gegner Buffs hat.', 'Fire ${banner.first.nameL} when the enemy has buffs.'));
+      }
+    }
+    if (heiler.isNotEmpty) {
+      plan.add(tx('${heiler.first.nameL} heilt – nach dem großen Schaden der Gegner zünden, nicht auf Vorrat.',
+          '${heiler.first.nameL} heals – fire after the enemy\'s big hit, not in advance.'));
+    }
+    return plan;
   }
 
   static const _treffer = ['hit_aoe', 'hit_three', 'hit_single', 'hit_spread', 'hit_random', 'hit_chain', 'hit_edges', 'extra_attack'];
@@ -532,6 +767,9 @@ class TeamBuilder {
         final vorteil = t.where((h) => farbVorteil(h.element, titanFarbe) == 1).length;
         (vorteil >= 3 ? gut : schlecht).add(tx('$vorteil von ${t.length} Helden mit Farbvorteil gegen den Titan',
             '$vorteil of ${t.length} heroes strong against the titan'));
+        final te = _titanExtra(t);
+        gut.addAll(te.gut);
+        schlecht.addAll(te.schlecht);
       }
     }
     final fuerAufgaben = m == Modus.gegner ? Modus.angriff : m;
@@ -544,13 +782,14 @@ class TeamBuilder {
       for (final h in t)
         h.id: (zuordnung[h.id] ?? const []).isEmpty ? rollenName(hauptRolle(h)) : zuordnung[h.id]!.join(' · '),
     };
-    final helden = m == Modus.verteidigung ? aufstellen(t) : t;
+    final helden = m == Modus.verteidigung ? aufstellen(t) : zuendReihenfolge(t, m);
     return TeamVorschlag(helden, teamWert(t, m, titanFarbe: titanFarbe, gegner: gegner),
         chance: ch,
         staerken: gut,
         schwaechen: schlecht,
         aufgaben: aufgabenText,
-        truppen: truppenZuteilen(helden, fuerAufgaben));
+        truppen: truppenZuteilen(helden, fuerAufgaben),
+        plan: spielplan(helden, m, gegner: gegner));
   }
 
   static String _bausteinName(String k) => Sprache.en

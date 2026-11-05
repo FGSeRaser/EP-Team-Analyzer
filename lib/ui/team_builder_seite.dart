@@ -4,12 +4,16 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../daten/analyse.dart';
 import '../daten/datenbank.dart';
 import '../daten/sprache.dart';
 import '../daten/team_builder.dart';
+import '../daten/titan.dart';
 import '../daten/truppen_besitz.dart';
+import '../erkennung/screenshot.dart';
+import '../erkennung/titan_text.dart';
 import 'sammlung_scope.dart';
 import 'team_karte.dart';
 import 'widgets.dart';
@@ -37,7 +41,8 @@ class TeamBuilderSeite extends StatefulWidget {
 
 class _TeamBuilderSeiteState extends State<TeamBuilderSeite> {
   Modus _modus = Modus.verteidigung;
-  String _titanFarbe = 'rot';
+  TitanInfo _titan = TitanInfo();
+  String? _titanMeldung;
   bool _laeuft = false;
   List<TeamVorschlag>? _ergebnis;
 
@@ -72,15 +77,17 @@ class _TeamBuilderSeiteState extends State<TeamBuilderSeite> {
       truppenInventar: p.truppen,
       zufall: wuerfeln ? math.Random() : null,
       schonGezeigt: wuerfeln ? List.of(_gezeigt) : const [],
+      titan: _modus == Modus.titan ? _titan : null,
     );
     var erg = _modus == Modus.krieg
         ? b.krieg(pool)
-        : b.baue(pool, _modus, titanFarbe: _modus == Modus.titan ? _titanFarbe : null);
+        : b.baue(pool, _modus, titanFarbe: _modus == Modus.titan ? _titan.farbe : null);
     // Alles schon gesehen? Dann wieder von vorn mischen.
     if (erg.isEmpty && wuerfeln) {
       _gezeigt.clear();
-      final b2 = TeamBuilder(Analyse(widget.db), kraftVon: p.kraft, truppenInventar: p.truppen, zufall: math.Random());
-      erg = _modus == Modus.krieg ? b2.krieg(pool) : b2.baue(pool, _modus, titanFarbe: _modus == Modus.titan ? _titanFarbe : null);
+      final b2 = TeamBuilder(Analyse(widget.db),
+          kraftVon: p.kraft, truppenInventar: p.truppen, zufall: math.Random(), titan: _modus == Modus.titan ? _titan : null);
+      erg = _modus == Modus.krieg ? b2.krieg(pool) : b2.baue(pool, _modus, titanFarbe: _modus == Modus.titan ? _titan.farbe : null);
     }
     if (!mounted) return;
     setState(() {
@@ -150,26 +157,7 @@ class _TeamBuilderSeiteState extends State<TeamBuilderSeite> {
               ]),
             ]),
           ),
-          if (_modus == Modus.titan)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(tx('Farbe des Titanen', 'Titan color'), style: t.textTheme.titleSmall),
-                const SizedBox(height: 6),
-                Wrap(spacing: 6, children: [
-                  for (final f in elementFarben.keys)
-                    ChoiceChip(
-                      avatar: CircleAvatar(backgroundColor: elementFarben[f], radius: 7),
-                      label: Text(elementName(f)),
-                      selected: _titanFarbe == f,
-                      onSelected: (_) => setState(() {
-                        _titanFarbe = f;
-                        _zuruecksetzen();
-                      }),
-                    ),
-                ]),
-              ]),
-            ),
+          if (_modus == Modus.titan) _titanBereich(t),
           Padding(
             padding: const EdgeInsets.all(16),
             child: Row(children: [
@@ -241,6 +229,125 @@ class _TeamBuilderSeiteState extends State<TeamBuilderSeite> {
               ),
             ),
         ],
+      ),
+    );
+  }
+
+  Future<void> _titanScreenshot() async {
+    final datei = await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (datei == null) return;
+    setState(() => _titanMeldung = tx('Lese Screenshot …', 'Reading screenshot …'));
+    try {
+      final shot = await screenshotLaden(await datei.readAsBytes(), pfad: datei.path);
+      final texte = await textLesen(shot);
+      final e = titanAusText(texte, bild: shot.bild);
+      if (!mounted) return;
+      setState(() {
+        _titan = e.anwenden(_titan);
+        _zuruecksetzen();
+        _titanMeldung = [
+          e.farbe == null ? tx('Farbe nicht erkannt', 'Color not detected') : '${tx('Farbe', 'Color')}: ${elementName(e.farbe!)}',
+          e.sterne == null ? tx('Sterne nicht erkannt', 'Stars not detected') : '${e.sterne}★',
+          if (e.selten) tx('selten', 'rare'),
+          ...e.eigenschaften.map((k) => titanEigenschaften.firstWhere((x) => x.key == k).name),
+        ].join(' · ') +
+            tx(' – bitte prüfen.', ' – please check.');
+      });
+    } catch (err) {
+      if (mounted) setState(() => _titanMeldung = tx('Screenshot konnte nicht gelesen werden: $err', 'Could not read screenshot: $err'));
+    }
+  }
+
+  Widget _titanBereich(ThemeData t) {
+    void neu(VoidCallback f) => setState(() {
+          f();
+          _zuruecksetzen();
+        });
+    return Card(
+      margin: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            Expanded(child: Text(tx('Welcher Titan?', 'Which titan?'), style: t.textTheme.titleMedium)),
+            TextButton.icon(
+              onPressed: _titanScreenshot,
+              icon: const Icon(Icons.photo_camera, size: 18),
+              label: Text(tx('Screenshot', 'Screenshot')),
+            ),
+          ]),
+          if (_titanMeldung != null) Text(_titanMeldung!, style: t.textTheme.bodySmall?.copyWith(color: t.colorScheme.primary)),
+          const SizedBox(height: 6),
+          Text(tx('Farbe des Titanen', 'Titan color'), style: t.textTheme.titleSmall),
+          const SizedBox(height: 4),
+          Wrap(spacing: 6, runSpacing: 4, children: [
+            for (final f in elementFarben.keys)
+              ChoiceChip(
+                avatar: CircleAvatar(backgroundColor: elementFarben[f], radius: 7),
+                label: Text(elementName(f)),
+                selected: _titan.farbe == f,
+                onSelected: (_) => neu(() => _titan.farbe = f),
+              ),
+          ]),
+          const SizedBox(height: 8),
+          Row(children: [
+            SizedBox(width: 90, child: Text('${_titan.sterne}★ Titan')),
+            Expanded(
+              child: Slider(
+                value: _titan.sterne.toDouble(),
+                min: 1,
+                max: 14,
+                divisions: 13,
+                label: '${_titan.sterne}★',
+                onChanged: (v) => neu(() => _titan.sterne = v.round()),
+              ),
+            ),
+          ]),
+          SwitchListTile(
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+            title: Text(tx('Seltener / mythischer Titan', 'Rare / mythic titan')),
+            value: _titan.selten,
+            onChanged: (v) => neu(() => _titan.selten = v),
+          ),
+          Text(tx('Besonderheiten (was du im Spiel siehst)', 'Special traits (what you see in the game)'),
+              style: t.textTheme.titleSmall),
+          const SizedBox(height: 4),
+          Wrap(spacing: 6, runSpacing: 4, children: [
+            for (final e in titanEigenschaften)
+              FilterChip(
+                label: Text(e.name),
+                tooltip: e.erklaerung,
+                selected: _titan.hat(e.key),
+                onSelected: (an) => neu(() {
+                  if (an) {
+                    _titan.eigenschaften.add(e.key);
+                  } else {
+                    _titan.eigenschaften.remove(e.key);
+                  }
+                }),
+              ),
+          ]),
+          if (_titan.hat('bonus')) ...[
+            const SizedBox(height: 8),
+            Text(tx('Welche Farbe bekommt den Bonus?', 'Which color gets the bonus?'), style: t.textTheme.titleSmall),
+            const SizedBox(height: 4),
+            Wrap(spacing: 6, runSpacing: 4, children: [
+              for (final f in elementFarben.keys)
+                ChoiceChip(
+                  avatar: CircleAvatar(backgroundColor: elementFarben[f], radius: 7),
+                  label: Text(elementName(f)),
+                  selected: _titan.bonusFarbe == f,
+                  onSelected: (_) => neu(() => _titan.bonusFarbe = f),
+                ),
+            ]),
+          ],
+          for (final e in titanEigenschaften.where((e) => _titan.hat(e.key)))
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text('• ${e.name}: ${e.erklaerung}', style: t.textTheme.bodySmall),
+            ),
+        ]),
       ),
     );
   }

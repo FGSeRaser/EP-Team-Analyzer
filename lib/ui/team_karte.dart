@@ -132,6 +132,34 @@ class TeamKarte extends StatelessWidget {
                 Expanded(child: Text(s, style: t.textTheme.bodySmall)),
               ]),
             ),
+          if (v.plan.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: t.colorScheme.primary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Row(children: [
+                  Icon(Icons.sports_esports, size: 18, color: t.colorScheme.primary),
+                  const SizedBox(width: 6),
+                  Text(tx('So spielst du es', 'How to play it'),
+                      style: t.textTheme.titleSmall?.copyWith(color: t.colorScheme.primary)),
+                ]),
+                const SizedBox(height: 6),
+                for (var i = 0; i < v.plan.length; i++)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      SizedBox(width: 20, child: Text('${i + 1}.', style: t.textTheme.bodySmall)),
+                      Expanded(child: Text(v.plan[i], style: t.textTheme.bodySmall)),
+                    ]),
+                  ),
+              ]),
+            ),
+          ],
           Align(
             alignment: Alignment.centerRight,
             child: TextButton.icon(
