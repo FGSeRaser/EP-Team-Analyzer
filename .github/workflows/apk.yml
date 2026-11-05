@@ -1,0 +1,53 @@
+# Baut bei jedem Push automatisch die Android-APK.
+# Die fertige APK findest du unter: Actions -> letzter Lauf -> Artifacts
+# Autor: FGSeRaser – https://github.com/FGSeRaser
+name: APK bauen
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Android-Projekt erzeugen (falls noch nicht vorhanden)
+        run: |
+          if [ ! -d android ]; then
+            flutter create --project-name ep_team_analyzer --org de.fgseraser --platforms android .
+            rm -f test/widget_test.dart
+          fi
+          python3 tools/android_anpassen.py
+
+      - name: Feste Signatur verwenden (damit Updates über die alte App installiert werden können)
+        run: |
+          mkdir -p ~/.android
+          cp android-signatur/debug.keystore ~/.android/debug.keystore
+
+      - run: flutter pub get
+
+      - name: Code prüfen
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
+
+      - name: Tests
+        run: flutter test
+
+      - name: APK bauen
+        run: flutter build apk --release
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: EP-Team-Analyzer-APK
+          path: build/app/outputs/flutter-apk/app-release.apk

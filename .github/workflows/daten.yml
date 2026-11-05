@@ -1,0 +1,48 @@
+# Holt jede Woche die neuesten Heldendaten von HeroPlan, baut Datenbank und
+# Porträt-Fingerabdrücke neu und committet sie. Der Push startet danach den APK-Build.
+# Autor: FGSeRaser – https://github.com/FGSeRaser
+name: Heldendaten aktualisieren
+
+on:
+  schedule:
+    - cron: '17 4 * * 1'   # montags früh
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  daten:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - run: pip install pillow
+
+      - name: HeroPlan holen (nur Daten, Sprachen und Porträts)
+        run: |
+          git clone --depth 1 --filter=blob:none --no-checkout https://github.com/heroplan/heroplan.github.io.git heroplan
+          cd heroplan
+          git sparse-checkout set --no-cone data/ 'langs_json/*_de.json' 'langs_json/*_en.json' imgs/hero_icon/
+          git checkout
+
+      - name: Datenbank und Fingerabdrücke bauen
+        run: |
+          python3 tools/build_helden_db.py heroplan
+          python3 tools/build_portraits.py heroplan
+
+      - name: Änderungen committen
+        run: |
+          git config user.name "FGSeRaser Daten-Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add assets/data
+          if git diff --cached --quiet; then
+            echo "Keine neuen Daten."
+          else
+            git commit -m "Heldendaten aktualisiert ($(date +%Y-%m-%d))"
+            git push
+          fi
