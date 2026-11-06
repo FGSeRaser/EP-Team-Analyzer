@@ -1,7 +1,7 @@
 name: ep_team_analyzer
 description: "E&P Team-Analyzer – Helden-Wissen, Konter und Team-Analyse für Empires & Puzzles. Von FGSeRaser (github.com/FGSeRaser)."
 publish_to: 'none'
-version: 0.12.1+16
+version: 0.13.0+17
 
 environment:
   sdk: ^3.5.0
@@ -27,6 +27,7 @@ flutter:
   assets:
     - assets/data/helden.json
     - assets/data/talente.json
+    - assets/data/stand.json
     - assets/data/portraits.json
     - assets/data/portraits.bin
     - assets/icon/icon.png

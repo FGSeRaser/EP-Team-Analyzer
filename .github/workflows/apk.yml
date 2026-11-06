@@ -7,6 +7,8 @@ on:
   push:
     paths-ignore:
       - 'news/**'
+      - 'assets/data/**'
+      - '.github/workflows/daten.yml'
       - '.github/workflows/news.yml'
       - 'tools/build_news.py'
   workflow_dispatch:

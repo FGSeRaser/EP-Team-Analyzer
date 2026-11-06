@@ -1,16 +1,20 @@
-# Holt jede Woche die neuesten Heldendaten von HeroPlan, baut Datenbank und
-# Porträt-Fingerabdrücke neu und committet sie. Der Push startet danach den APK-Build.
+# Holt alle 6 Stunden die neuesten Heldendaten von HeroPlan, baut Datenbank,
+# Porträt-Fingerabdrücke und Talente neu und committet sie mit assets/data/stand.json.
+# Die App lädt neue Daten selbst von GitHub – dafür ist KEIN neues APK nötig.
 # Autor: FGSeRaser – https://github.com/FGSeRaser
 name: Heldendaten aktualisieren
 
 on:
   schedule:
-    - cron: '17 4 * * 1'   # montags früh
+    - cron: '41 */6 * * *'   # alle 6 Stunden
   workflow_dispatch:
 
 permissions:
   contents: write
-  actions: write
+
+concurrency:
+  group: daten
+  cancel-in-progress: false
 
 jobs:
   daten:
@@ -36,6 +40,8 @@ jobs:
           python3 tools/build_helden_db.py heroplan
           python3 tools/build_portraits.py heroplan
           python3 tools/build_talente.py heroplan
+          # Version nur erhöhen, wenn sich wirklich etwas geändert hat
+          if python3 tools/build_stand.py; then echo "neu=1" >> "$GITHUB_ENV"; else git checkout -- assets/data; fi
 
       - name: Änderungen committen
         run: |
@@ -45,10 +51,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "Keine neuen Daten."
           else
-            git commit -m "Heldendaten aktualisiert ($(date +%Y-%m-%d))"
-            git push
-            # Automatische Commits starten keinen Build -> APK-Build hier selbst anstoßen
-            gh workflow run apk.yml --ref main
+            git commit -m "Heldendaten aktualisiert ($(date -u +%Y-%m-%d\ %H:%M) UTC)"
+            git pull --rebase origin main
+            git push origin HEAD:main
           fi
-        env:
-          GH_TOKEN: ${{ github.token }}

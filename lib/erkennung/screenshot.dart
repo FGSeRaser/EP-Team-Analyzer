@@ -8,6 +8,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 
+import '../daten/live_daten.dart';
+
 import 'erkennung.dart';
 import 'kartentext.dart';
 
@@ -29,15 +31,20 @@ class ReferenzDaten {
   const ReferenzDaten(this.ids, this.trainer, this.roh);
 
   static ReferenzDaten? _cache;
+  static bool _hookGesetzt = false;
 
   static Future<ReferenzDaten> laden() async {
     if (_cache != null) return _cache!;
-    final meta = jsonDecode(await rootBundle.loadString('assets/data/portraits.json')) as Map<String, dynamic>;
-    final bin = await rootBundle.load('assets/data/portraits.bin');
+    if (!_hookGesetzt) {
+      _hookGesetzt = true;
+      LiveDaten.beimWechsel(() => _cache = null);
+    }
+    final meta = jsonDecode(await LiveDaten.text('portraits.json')) as Map<String, dynamic>;
+    final bin = await LiveDaten.bytes('portraits.bin');
     _cache = ReferenzDaten(
       List<String>.from(meta['ids'] as List),
       List<String>.from(meta['trainer'] as List? ?? const []),
-      bin.buffer.asUint8List(bin.offsetInBytes, bin.lengthInBytes),
+      bin,
     );
     return _cache!;
   }

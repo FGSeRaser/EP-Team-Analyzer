@@ -8,6 +8,7 @@
 import 'package:flutter/material.dart';
 
 import 'daten/datenbank.dart';
+import 'daten/live_daten.dart';
 import 'daten/sammlung.dart';
 import 'daten/sprache.dart';
 import 'daten/updater.dart';
@@ -23,14 +24,40 @@ void main() {
   WidgetsFlutterBinding.ensureInitialized();
   final sammlung = Sammlung()..laden();
   Sprache.instanz.laden();
-  final db = Datenbank.laden();
-  runApp(AnalyzerApp(sammlung: sammlung, db: db));
+  runApp(AnalyzerApp(sammlung: sammlung));
+}
+
+/// Aktuelle Datenbank – wird ausgetauscht, wenn neue Heldendaten von GitHub kommen
+final ValueNotifier<Future<Datenbank>> datenbank = ValueNotifier(Datenbank.laden());
+final GlobalKey<ScaffoldMessengerState> meldungen = GlobalKey<ScaffoldMessengerState>();
+
+/// Neue Heldendaten holen (läuft im Hintergrund, höchstens alle 30 Minuten)
+DateTime? _letztePruefung;
+Future<void> datenPruefen() async {
+  final jetzt = DateTime.now();
+  if (_letztePruefung != null && jetzt.difference(_letztePruefung!) < const Duration(minutes: 30)) return;
+  _letztePruefung = jetzt;
+  final neu = await LiveDaten.aktualisieren();
+  if (neu == null) return;
+  final alt = await datenbank.value;
+  LiveDaten.wechselMelden();
+  final frisch = await Datenbank.laden();
+  final altIds = {for (final h in alt.helden) h.id};
+  final neueHelden = frisch.helden.where((h) => !altIds.contains(h.id) && h.kostuemVon == null).toList();
+  final erschienen = frisch.helden.where((h) => !h.kommend && (alt.nachId[h.id]?.kommend ?? false)).toList();
+  datenbank.value = Future.value(frisch);
+  final namen = {...erschienen.map((h) => h.nameL), ...neueHelden.map((h) => h.nameL)}.take(5).join(', ');
+  meldungen.currentState?.showSnackBar(SnackBar(
+    duration: const Duration(seconds: 6),
+    content: Text(namen.isEmpty
+        ? tx('Heldendaten aktualisiert.', 'Hero data updated.')
+        : tx('Heldendaten aktualisiert: $namen', 'Hero data updated: $namen')),
+  ));
 }
 
 class AnalyzerApp extends StatelessWidget {
   final Sammlung sammlung;
-  final Future<Datenbank> db;
-  const AnalyzerApp({super.key, required this.sammlung, required this.db});
+  const AnalyzerApp({super.key, required this.sammlung});
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +82,11 @@ class AnalyzerApp extends StatelessWidget {
               brightness: Brightness.dark,
             ),
           ),
-          home: Startseite(db: db),
+          scaffoldMessengerKey: meldungen,
+          home: ValueListenableBuilder<Future<Datenbank>>(
+            valueListenable: datenbank,
+            builder: (_, db, __) => Startseite(db: db),
+          ),
         ),
       ),
     );
@@ -75,12 +106,23 @@ class _StartseiteState extends State<Startseite> {
   static bool _updateGeprueft = false;
   late int _tab = _letzterTab;
 
+  late final AppLifecycleListener _lebenszyklus;
+
+  @override
+  void dispose() {
+    _lebenszyklus.dispose();
+    super.dispose();
+  }
+
   @override
   void initState() {
     super.initState();
+    // Beim Zurückkehren in die App nach neuen Heldendaten schauen
+    _lebenszyklus = AppLifecycleListener(onResume: datenPruefen);
     // Einmal pro App-Start (höchstens einmal am Tag) auf GitHub nach einer neuen Version schauen
     if (!_updateGeprueft) {
       _updateGeprueft = true;
+      Future<void>.delayed(const Duration(seconds: 2), datenPruefen);
       Future<void>.delayed(const Duration(seconds: 3), () async {
         final info = await Updater.pruefenWennFaellig();
         if (info != null && mounted) await zeigeUpdate(context, info);

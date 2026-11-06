@@ -7,9 +7,8 @@
 
 import 'dart:convert';
 
-import 'package:flutter/services.dart' show rootBundle;
-
 import 'datenbank.dart';
+import 'live_daten.dart';
 import 'sprache.dart';
 import 'team_builder.dart';
 import 'werte.dart';
@@ -66,8 +65,14 @@ class TalentRaster {
     return out;
   }
 
-  static Future<Map<String, TalentRaster>> laden() async =>
-      _cache ??= ausJson(await rootBundle.loadString('assets/data/talente.json'));
+  static bool _hook = false;
+  static Future<Map<String, TalentRaster>> laden() async {
+    if (!_hook) {
+      _hook = true;
+      LiveDaten.beimWechsel(() => _cache = null);
+    }
+    return _cache ??= ausJson(await LiveDaten.text('talente.json'));
+  }
 }
 
 /// Wofür der Held eingesetzt wird

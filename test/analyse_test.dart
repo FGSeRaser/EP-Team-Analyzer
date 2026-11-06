@@ -333,4 +333,14 @@ void main() {
     expect(t.laeuft(DateTime.utc(2026, 11, 21)), isTrue);
     expect(t.laeuft(DateTime.utc(2026, 11, 25)), isFalse);
   });
+
+  test('„Kommt“ endet am Erscheinungstag automatisch', () {
+    final j = jsonDecode(File('assets/data/helden.json').readAsStringSync()) as Map<String, dynamic>;
+    final roh = Map<String, dynamic>.from((j['helden'] as List).first as Map);
+    expect(Held.ausJson({...roh, 'neu': 1, 'd': '2000-01-01'}).kommend, isFalse);
+    expect(Held.ausJson({...roh, 'neu': 1, 'd': '2999-01-01'}).kommend, isTrue);
+    expect(Held.ausJson({...roh, 'neu': 1, 'd': ''}).kommend, isTrue);
+    final stand = jsonDecode(File('assets/data/stand.json').readAsStringSync()) as Map<String, dynamic>;
+    expect((stand['dateien'] as Map).length, 4);
+  });
 }

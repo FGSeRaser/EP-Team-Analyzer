@@ -4,7 +4,8 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
+
+import 'live_daten.dart';
 
 import 'sprache.dart';
 
@@ -249,7 +250,8 @@ class Held {
       immun: im,
       kostuemVon: j['c'] as String?,
       kostuemTyp: j['ct'] as String?,
-      kommend: j['neu'] == 1,
+      // „Kommt“ nur, solange das Erscheinungsdatum in der Zukunft liegt (ohne Datum: noch offen)
+      kommend: j['neu'] == 1 && _nochNichtDa((j['d'] ?? '') as String),
       unvollstaendig: j['uv'] == 1,
       titelEn: (j['tie'] ?? '') as String,
       klasseEn: (j['ke'] ?? '') as String,
@@ -294,7 +296,7 @@ class Datenbank {
   }) : nachId = {for (final h in helden) h.id: h};
 
   static Future<Datenbank> laden() async {
-    final text = await rootBundle.loadString('assets/data/helden.json');
+    final text = await LiveDaten.text('helden.json');
     return compute(_parsen, text);
   }
 
@@ -315,6 +317,13 @@ class Datenbank {
     return helden.where((x) => x.basisId == basis).toList()
       ..sort((a, b) => (a.kostuemTyp ?? '').compareTo(b.kostuemTyp ?? ''));
   }
+}
+
+bool _nochNichtDa(String datum) {
+  final d = DateTime.tryParse(datum);
+  if (d == null) return true;
+  final heute = DateTime.now();
+  return d.isAfter(DateTime(heute.year, heute.month, heute.day));
 }
 
 Datenbank _parsen(String text) {
