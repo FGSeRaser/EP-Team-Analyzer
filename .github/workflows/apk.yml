@@ -5,6 +5,10 @@ name: APK bauen
 
 on:
   push:
+    paths-ignore:
+      - 'news/**'
+      - '.github/workflows/news.yml'
+      - 'tools/build_news.py'
   workflow_dispatch:
 
 # Nötig, damit der Workflow ein Release mit der APK anlegen darf
