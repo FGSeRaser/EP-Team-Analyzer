@@ -296,7 +296,7 @@ class _NewsSeiteState extends State<NewsSeite> {
         },
         color: a.balance ? Colors.orange : t.colorScheme.primary,
       ),
-      title: Text(a.titel, maxLines: 2, overflow: TextOverflow.ellipsis),
+      title: Text(a.titelL, maxLines: 2, overflow: TextOverflow.ellipsis),
       subtitle: Text('${_datum(a.datum)} · ${a.arten.map(newsArtName).join(', ')}'),
       trailing: neu
           ? Container(
@@ -310,23 +310,50 @@ class _NewsSeiteState extends State<NewsSeite> {
   }
 }
 
-class _ArtikelSeite extends StatelessWidget {
+class _ArtikelSeite extends StatefulWidget {
   final Datenbank db;
   final NewsArtikel artikel;
   const _ArtikelSeite({required this.db, required this.artikel});
+
+  @override
+  State<_ArtikelSeite> createState() => _ArtikelSeiteState();
+}
+
+class _ArtikelSeiteState extends State<_ArtikelSeite> {
+  bool _original = false;
 
   Future<void> _oeffnen(String url) => launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
 
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context);
-    final a = artikel;
+    final a = widget.artikel;
+    final db = widget.db;
+    final deutsch = !Sprache.en && a.hatDeutsch && !_original;
+    final titel = deutsch ? a.titelL : a.titel;
+    final text = deutsch && a.textDe.isNotEmpty ? a.textDe : a.text;
     final helden = erwaehnteHelden(db, a.text);
     return Scaffold(
       appBar: AppBar(title: Text(a.arten.map(newsArtName).join(' · '))),
       body: ListView(padding: const EdgeInsets.all(16), children: [
-        Text(a.titel, style: t.textTheme.titleLarge),
+        Text(titel, style: t.textTheme.titleLarge),
         Text(_datum(a.datum), style: t.textTheme.bodySmall),
+        if (!Sprache.en && a.hatDeutsch)
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Row(children: [
+              Icon(Icons.translate, size: 16, color: t.disabledColor),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(_original ? 'Original (Englisch)' : 'Maschinell übersetzt aus dem Englischen',
+                    style: t.textTheme.bodySmall?.copyWith(color: t.disabledColor)),
+              ),
+              TextButton(
+                onPressed: () => setState(() => _original = !_original),
+                child: Text(_original ? 'Deutsch' : 'Original'),
+              ),
+            ]),
+          ),
         const SizedBox(height: 10),
         Wrap(spacing: 8, runSpacing: 6, children: [
           FilledButton.tonalIcon(
@@ -334,12 +361,6 @@ class _ArtikelSeite extends StatelessWidget {
             icon: const Icon(Icons.open_in_new, size: 18),
             label: Text(tx('Original öffnen', 'Open original')),
           ),
-          if (!Sprache.en)
-            OutlinedButton.icon(
-              onPressed: () => _oeffnen('https://translate.google.com/translate?sl=en&tl=de&u=${Uri.encodeComponent(a.url)}'),
-              icon: const Icon(Icons.translate, size: 18),
-              label: const Text('Auf Deutsch lesen'),
-            ),
         ]),
         if (helden.isNotEmpty) ...[
           const SizedBox(height: 14),
@@ -357,15 +378,10 @@ class _ArtikelSeite extends StatelessWidget {
           ]),
         ],
         const SizedBox(height: 14),
-        if (!Sprache.en)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Text('Die offiziellen News gibt es nur auf Englisch.', style: t.textTheme.bodySmall?.copyWith(color: t.disabledColor)),
-          ),
-        if (a.text.isEmpty)
+        if (text.isEmpty)
           Text(tx('Für diesen Artikel liegt kein Text vor – öffne das Original.', 'No text for this article – open the original.'))
         else
-          SelectableText(a.text, style: t.textTheme.bodyMedium),
+          SelectableText(text, style: t.textTheme.bodyMedium),
       ]),
     );
   }

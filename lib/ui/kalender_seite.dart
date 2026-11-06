@@ -72,7 +72,8 @@ class TerminZeile extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('${e.name} ${e.symbol}'.trim(), style: t.textTheme.titleSmall),
+              Text('${e.nameL} ${e.symbol}'.trim(), style: t.textTheme.titleSmall),
+              if (e.nameL != e.name) Text(e.name, style: t.textTheme.labelSmall?.copyWith(color: t.disabledColor)),
               Text('${eventArt(e.name).name} · $info', style: t.textTheme.bodySmall),
               if (laeuft) ...[
                 const SizedBox(height: 4),
@@ -163,8 +164,7 @@ class _KalenderSeiteState extends State<KalenderSeite> {
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               for (final r in widget.regeln)
                 Padding(padding: const EdgeInsets.only(bottom: 6), child: Text('• $r', style: t.textTheme.bodySmall)),
-              if (!Sprache.en)
-                Text('(Originaltext vom Spiel, nur auf Englisch)', style: t.textTheme.bodySmall?.copyWith(color: t.disabledColor)),
+
             ]),
           ),
         ],

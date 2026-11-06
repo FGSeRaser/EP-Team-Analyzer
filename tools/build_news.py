@@ -15,6 +15,7 @@ import json
 import re
 import sys
 import time
+import urllib.parse
 import urllib.request
 from pathlib import Path
 
@@ -154,6 +155,103 @@ def kalender_aus(artikel):
     return sorted(termine.values(), key=lambda t: (t["start"], t["name"])), regeln
 
 
+# ---------------------------------------------------------------------------
+# Deutsch: Eventnamen aus einer festen Liste, Texte maschinell übersetzt
+# ---------------------------------------------------------------------------
+
+EVENT_DE = {
+    "tavern of legends": "Taverne der Legenden",
+    "costume chamber": "Kostümkammer",
+    "charming costume chamber": "Charmante Kostümkammer",
+    "goblin village": "Goblin-Dorf",
+    "dragon cave": "Drachenhöhle",
+    "vigilant vegetables": "Wachsames Gemüse",
+    "contest of elements": "Wettstreit der Elemente",
+    "astral plane": "Astralebene",
+    "war of the three kingdoms": "Krieg der drei Königreiche",
+    "monster island": "Monsterinsel",
+    "mythic titan": "Mythischer Titan",
+    "hero coach": "Heldentrainer",
+    "windfall temple": "Tempel des Glücks",
+    "hero league sign-up": "Heldenliga – Anmeldung",
+    "hero league": "Heldenliga",
+    "shadows of the deep": "Schatten der Tiefe",
+    "covenant quest": "Bündnis-Quest",
+    "black friday": "Black Friday",
+    "ninja tower": "Ninja-Turm",
+    "tower of magic": "Turm der Magie",
+    "soul exchange": "Seelentausch",
+    "ancient underroot": "Uralte Unterwurzel",
+    "legendary troop quest": "Quest der legendären Truppen",
+    "demon raiders": "Dämonen-Plünderer",
+    "atlantis rises": "Atlantis erhebt sich",
+    "valhalla forever": "Walhalla für immer",
+    "tremors of underwild": "Beben der Unterwildnis",
+    "judgment of dunes": "Urteil der Dünen",
+    "untold tales": "Unerzählte Geschichten",
+    "beach party": "Strandparty",
+    "springvale": "Springvale",
+    "pirates of corellia": "Piraten von Corellia",
+    "winter festival": "Winterfest",
+    "santa's challenge": "Weihnachtsmann-Herausforderung",
+    "alliance quest": "Allianz-Quest",
+    "raid tournament": "Raid-Turnier",
+    "titan valley": "Titanental",
+    "tournament": "Turnier",
+}
+
+
+def event_de(name):
+    n = name.strip()
+    k = n.lower()
+    if k in EVENT_DE:
+        return EVENT_DE[k]
+    # "Alliance Quest: Clash of Knights" -> "Allianz-Quest: Clash of Knights" usw.
+    for en in sorted(EVENT_DE, key=len, reverse=True):
+        if k.startswith(en + ":") or k.startswith(en + " -") or k.startswith(en + " –"):
+            return EVENT_DE[en] + n[len(en):]
+    return ""
+
+
+def _gtx(text):
+    q = urllib.parse.urlencode({"client": "gtx", "sl": "en", "tl": "de", "dt": "t", "q": text})
+    req = urllib.request.Request("https://translate.googleapis.com/translate_a/single?" + q,
+                                 headers={"User-Agent": "Mozilla/5.0 (EP-Team-Analyzer News)"})
+    with urllib.request.urlopen(req, timeout=30) as r:
+        daten = json.loads(r.read().decode("utf-8"))
+    return "".join(teil[0] for teil in daten[0] if teil and teil[0])
+
+
+def uebersetzen(text):
+    """Englisch -> Deutsch in Stücken (max. ~1800 Zeichen je Anfrage). Leer bei Fehler."""
+    if not text or not text.strip():
+        return ""
+    stuecke, aktuell = [], ""
+    for absatz in text.split("\n"):
+        if len(aktuell) + len(absatz) + 1 > 1800 and aktuell:
+            stuecke.append(aktuell)
+            aktuell = ""
+        aktuell += absatz + "\n"
+    if aktuell:
+        stuecke.append(aktuell)
+    out = []
+    for st in stuecke:
+        # Zeilen über eine Markierung erhalten (gtx verschluckt sonst Zeilenumbrüche)
+        roh = st.rstrip("\n").replace("\n", " ⏎ ")
+        for versuch in range(3):
+            try:
+                t = _gtx(roh)
+                break
+            except Exception as e:  # noqa: BLE001
+                if versuch == 2:
+                    print(f"Übersetzung fehlgeschlagen: {e}", file=sys.stderr)
+                    return ""
+                time.sleep(4)
+        out.append(re.sub(r"\s*⏎\s*", "\n", t))
+        time.sleep(0.6)
+    return "\n".join(out).strip()
+
+
 def main():
     ziel = Path(sys.argv[1]) if len(sys.argv) > 1 else Path(__file__).resolve().parent.parent / "news/news.json"
     alt = {}
@@ -170,20 +268,39 @@ def main():
     for i, a in enumerate(neu[:40]):
         vorher = alt.get(a["url"])
         if vorher and vorher.get("text"):
-            a.update({k: vorher[k] for k in ("kurz", "text") if k in vorher})
+            a.update({k: vorher[k] for k in ("kurz", "text", "titel_de", "kurz_de", "text_de") if k in vorher})
         elif i < DETAILS or re.search(r"(balanc|release notes|buff|nerf)", a["titel"].lower()):
             kurz, text = artikel_text(a["url"])
             a["kurz"], a["text"] = kurz, text
             time.sleep(1)
         a["arten"] = einordnen(a["titel"], a.get("text", ""))
+        # Deutsch – nur einmal übersetzen, danach aus der alten Datei übernehmen
+        if not a.get("titel_de") or (vorher and vorher.get("titel") != a["titel"]):
+            a["titel_de"] = uebersetzen(a["titel"])
+        if a.get("text") and not a.get("text_de"):
+            a["text_de"] = uebersetzen(a["text"])
+        if a.get("kurz") and not a.get("kurz_de"):
+            a["kurz_de"] = uebersetzen(a["kurz"])
         ausgabe.append(a)
     termine, regeln = kalender_aus(ausgabe)
+    alte_namen = {}
+    alte_regeln = {}
+    try:
+        x = json.loads(ziel.read_text(encoding="utf-8")) if ziel.exists() else {}
+        alte_namen = {t["name"]: t.get("name_de", "") for t in x.get("kalender", [])}
+        alte_regeln = dict(zip(x.get("regeln", []), x.get("regeln_de", [])))
+    except Exception:  # noqa: BLE001
+        pass
+    for t in termine:
+        t["name_de"] = event_de(t["name"]) or alte_namen.get(t["name"]) or uebersetzen(t["name"]) or t["name"]
+    regeln_de = [alte_regeln.get(rg) or uebersetzen(rg) or rg for rg in regeln]
     daten = {
         "quelle": "empiresandpuzzles.com/news",
         "stand": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%MZ"),
         "artikel": ausgabe,
         "kalender": termine,
         "regeln": regeln,
+        "regeln_de": regeln_de,
     }
     ziel.parent.mkdir(parents=True, exist_ok=True)
     alt_ohne_stand = None

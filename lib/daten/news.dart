@@ -16,9 +16,11 @@ import 'updater.dart' show githubRepo;
 
 class NewsArtikel {
   final String titel, url, kurz, text;
+  final String titelDe, textDe;
   final DateTime datum;
   final List<String> arten;
-  const NewsArtikel(this.titel, this.datum, this.url, this.arten, this.kurz, this.text);
+  const NewsArtikel(this.titel, this.datum, this.url, this.arten, this.kurz, this.text,
+      {this.titelDe = '', this.textDe = ''});
 
   factory NewsArtikel.ausJson(Map<String, dynamic> j) => NewsArtikel(
         (j['titel'] ?? '') as String,
@@ -27,7 +29,14 @@ class NewsArtikel {
         [for (final a in (j['arten'] as List? ?? const [])) a as String],
         (j['kurz'] ?? '') as String,
         (j['text'] ?? '') as String,
+        titelDe: (j['titel_de'] ?? '') as String,
+        textDe: (j['text_de'] ?? '') as String,
       );
+
+  /// In der eingestellten Sprache (Deutsch = maschinell übersetzt, sonst Original)
+  String get titelL => !Sprache.en && titelDe.isNotEmpty ? titelDe : titel;
+  String get textL => !Sprache.en && textDe.isNotEmpty ? textDe : text;
+  bool get hatDeutsch => textDe.isNotEmpty || titelDe.isNotEmpty;
 
   bool get balance => arten.contains('balance');
 }
@@ -43,9 +52,9 @@ String newsArtName(String a) => switch (a) {
 
 /// Ein Termin aus dem offiziellen Event-Kalender (Zeiten in UTC)
 class EventTermin {
-  final String name, symbol, artikel;
+  final String name, nameDe, symbol, artikel;
   final DateTime start, ende;
-  const EventTermin(this.name, this.symbol, this.start, this.ende, this.artikel);
+  const EventTermin(this.name, this.symbol, this.start, this.ende, this.artikel, {this.nameDe = ''});
 
   factory EventTermin.ausJson(Map<String, dynamic> j) => EventTermin(
         (j['name'] ?? '') as String,
@@ -53,7 +62,10 @@ class EventTermin {
         DateTime.parse((j['start'] as String).replaceAll('Z', ':00Z')),
         DateTime.parse((j['ende'] as String).replaceAll('Z', ':00Z')),
         (j['artikel'] ?? '') as String,
+        nameDe: (j['name_de'] ?? '') as String,
       );
+
+  String get nameL => !Sprache.en && nameDe.isNotEmpty ? nameDe : name;
 
   bool laeuft(DateTime jetzt) => !jetzt.isBefore(start) && jetzt.isBefore(ende);
   Duration get dauer => ende.difference(start);
@@ -102,9 +114,11 @@ class NewsDienst {
       } catch (_) {}
     }
     termine.sort((a, b) => a.start.compareTo(b.start));
+    final regeln = [for (final x in (j['regeln'] as List? ?? const [])) x as String];
+    final regelnDe = [for (final x in (j['regeln_de'] as List? ?? const [])) x as String];
     return NewsStand(l, (j['stand'] ?? '') as String,
         termine: termine,
-        regeln: [for (final x in (j['regeln'] as List? ?? const [])) x as String],
+        regeln: !Sprache.en && regelnDe.length == regeln.length ? regelnDe : regeln,
         ausCache: ausCache,
         fehler: fehler);
   }
