@@ -108,6 +108,52 @@ def einordnen(titel, text):
     return arten or ["info"]
 
 
+EVENT_ZEILE = re.compile(
+    r"^[•\-*]?\s*(?P<sm>[A-Za-z]+)\s+(?P<sd>\d{1,2}),?\s*(?P<st>\d{1,2}:\d{2})\s*UTC\s*(?:→|->|–|-|to)\s*"
+    r"(?P<em>[A-Za-z]+)\s+(?P<ed>\d{1,2}),?\s*(?P<et>\d{1,2}:\d{2})\s*UTC\s*:\s*(?P<name>.+)$")
+
+
+def _zeit(monat, tag, uhr, jahr):
+    h, m = (int(x) for x in uhr.split(":"))
+    return dt.datetime(jahr, MONATE[monat.lower()], int(tag), h, m, tzinfo=dt.timezone.utc)
+
+
+def kalender_aus(artikel):
+    """Termine aus den offiziellen „Calendar of Events“-Artikeln"""
+    termine, regeln = {}, []
+    for a in sorted((x for x in artikel if "kalender" in x.get("arten", []) and x.get("text")), key=lambda x: x["datum"]):
+        jahr_artikel = int(a["datum"][:4])
+        monat_artikel = int(a["datum"][5:7])
+        neue_regeln = []
+        for zeile in a["text"].split("\n"):
+            z = zeile.strip()
+            m = EVENT_ZEILE.match(z)
+            if m and m.group("sm").lower() in MONATE and m.group("em").lower() in MONATE:
+                sm = MONATE[m.group("sm").lower()]
+                jahr = jahr_artikel + (1 if sm < monat_artikel - 6 else 0)
+                start = _zeit(m.group("sm"), m.group("sd"), m.group("st"), jahr)
+                ende = _zeit(m.group("em"), m.group("ed"), m.group("et"), jahr)
+                if ende < start:
+                    ende = ende.replace(year=ende.year + 1)
+                roh = m.group("name").strip()
+                # Emoji/Symbole am Ende abtrennen
+                name = re.sub(r"[^\w\s:'’&!\-.,()/]+$", "", roh).strip()
+                symbol = roh[len(name):].strip()
+                key = (name.lower(), start.isoformat())
+                termine[key] = {
+                    "name": name,
+                    "symbol": symbol,
+                    "start": start.strftime("%Y-%m-%dT%H:%MZ"),
+                    "ende": ende.strftime("%Y-%m-%dT%H:%MZ"),
+                    "artikel": a["url"],
+                }
+            elif re.search(r"\b(rotate|every|starting|each)\b", z, re.I) and 15 < len(z) < 300 and not z.lower().startswith("disclaimer"):
+                neue_regeln.append(z)
+        if neue_regeln:
+            regeln = neue_regeln  # neuester Kalender gewinnt
+    return sorted(termine.values(), key=lambda t: (t["start"], t["name"])), regeln
+
+
 def main():
     ziel = Path(sys.argv[1]) if len(sys.argv) > 1 else Path(__file__).resolve().parent.parent / "news/news.json"
     alt = {}
@@ -131,10 +177,13 @@ def main():
             time.sleep(1)
         a["arten"] = einordnen(a["titel"], a.get("text", ""))
         ausgabe.append(a)
+    termine, regeln = kalender_aus(ausgabe)
     daten = {
         "quelle": "empiresandpuzzles.com/news",
         "stand": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%MZ"),
         "artikel": ausgabe,
+        "kalender": termine,
+        "regeln": regeln,
     }
     ziel.parent.mkdir(parents=True, exist_ok=True)
     alt_ohne_stand = None

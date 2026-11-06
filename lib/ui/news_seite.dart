@@ -9,6 +9,7 @@ import '../daten/news.dart';
 import '../daten/sprache.dart';
 import 'held_analyse_seite.dart';
 import 'held_detail.dart';
+import 'kalender_seite.dart';
 import 'widgets.dart';
 
 /// Anzahl ungelesener News (für das Abzeichen in der Navigationsleiste)
@@ -83,6 +84,10 @@ class _NewsSeiteState extends State<NewsSeite> {
     final artikel = _stand?.artikel ?? const <NewsArtikel>[];
     final balance = artikel.where((a) => a.balance).take(4).toList();
     final gefiltert = _filter == 'alle' ? artikel : artikel.where((a) => a.arten.contains(_filter)).toList();
+    final termine = _stand?.termine ?? const <EventTermin>[];
+    final utc = jetzt.toUtc();
+    final laufend = termine.where((e) => e.laeuft(utc)).toList()..sort((a, b) => a.ende.compareTo(b.ende));
+    final bald = termine.where((e) => utc.isBefore(e.start)).take(4).toList();
 
     return Scaffold(
       appBar: AppBar(title: Text(tx('News', 'News')), actions: [
@@ -93,6 +98,32 @@ class _NewsSeiteState extends State<NewsSeite> {
         child: ListView(
           padding: const EdgeInsets.only(bottom: 32),
           children: [
+            // ---------- Kalender ----------
+            Abschnitt(tx('Events', 'Events'), icon: Icons.calendar_month, kinder: [
+              if (termine.isEmpty)
+                Text(_laedt ? tx('Lade Kalender …', 'Loading calendar …') : tx('Noch kein Kalender verfügbar.', 'No calendar available yet.'),
+                    style: t.textTheme.bodySmall),
+              if (laufend.isNotEmpty) ...[
+                Text(tx('Läuft gerade', 'Running now'), style: t.textTheme.labelLarge?.copyWith(color: Colors.green)),
+                for (final e in laufend) TerminZeile(e, utc),
+              ],
+              if (bald.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                Text(tx('Als Nächstes', 'Up next'), style: t.textTheme.labelLarge?.copyWith(color: t.colorScheme.primary)),
+                for (final e in bald) TerminZeile(e, utc),
+              ],
+              if (termine.isNotEmpty)
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton.icon(
+                    onPressed: () => Navigator.push(context,
+                        MaterialPageRoute(builder: (_) => KalenderSeite(termine: termine, regeln: _stand?.regeln ?? const []))),
+                    icon: const Icon(Icons.calendar_view_month, size: 18),
+                    label: Text(tx('Ganzer Kalender', 'Full calendar')),
+                  ),
+                ),
+            ]),
+
             // ---------- Held des Monats ----------
             Abschnitt(tx('Held des Monats', 'Hero of the Month'), icon: Icons.workspace_premium, kinder: [
               _hdm(t, tx('Aktuell – ${monatName(jetzt.year, jetzt.month)}', 'Current – ${monatName(jetzt.year, jetzt.month)}'), hdmJetzt),

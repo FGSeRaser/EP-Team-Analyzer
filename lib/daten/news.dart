@@ -41,12 +41,49 @@ String newsArtName(String a) => switch (a) {
       _ => 'Info',
     };
 
+/// Ein Termin aus dem offiziellen Event-Kalender (Zeiten in UTC)
+class EventTermin {
+  final String name, symbol, artikel;
+  final DateTime start, ende;
+  const EventTermin(this.name, this.symbol, this.start, this.ende, this.artikel);
+
+  factory EventTermin.ausJson(Map<String, dynamic> j) => EventTermin(
+        (j['name'] ?? '') as String,
+        (j['symbol'] ?? '') as String,
+        DateTime.parse((j['start'] as String).replaceAll('Z', ':00Z')),
+        DateTime.parse((j['ende'] as String).replaceAll('Z', ':00Z')),
+        (j['artikel'] ?? '') as String,
+      );
+
+  bool laeuft(DateTime jetzt) => !jetzt.isBefore(start) && jetzt.isBefore(ende);
+  Duration get dauer => ende.difference(start);
+}
+
+/// Art eines Events (grob, nach dem Namen) – für Symbol und Erklärung
+({String name, String erkl}) eventArt(String name) {
+  final n = name.toLowerCase();
+  if (RegExp(r'(tavern|chamber|portal|summon|black friday|exchange)').hasMatch(n)) {
+    return (name: tx('Beschwörung', 'Summon'), erkl: tx('Portal / Beschwörung – neue Helden oder Kostüme ziehen', 'Portal / summon – pull new heroes or costumes'));
+  }
+  if (n.contains('alliance quest')) return (name: tx('Allianz-Quest', 'Alliance quest'), erkl: tx('Allianz-Event mit eigenen Regeln', 'Alliance event with special rules'));
+  if (n.contains('titan')) return (name: 'Titan', erkl: tx('Besonderer Titan für die Allianz', 'Special titan for the alliance'));
+  if (n.contains('war')) return (name: tx('Krieg', 'War'), erkl: tx('Kriegs-Event', 'War event'));
+  if (RegExp(r'(league|contest|tournament|coach)').hasMatch(n)) {
+    return (name: tx('Wettbewerb', 'Competition'), erkl: tx('Wettbewerb / Turnier / Liga', 'Competition / tournament / league'));
+  }
+  if (n.contains('tower')) return (name: tx('Turm', 'Tower'), erkl: tx('Turm-Event mit vielen Stufen', 'Tower event with many floors'));
+  return (name: 'Event', erkl: tx('Herausforderung / Event mit eigenen Stufen', 'Challenge / event with its own stages'));
+}
+
 class NewsStand {
   final List<NewsArtikel> artikel;
+  final List<EventTermin> termine;
+  final List<String> regeln;
   final String stand;
   final bool ausCache;
   final String? fehler;
-  const NewsStand(this.artikel, this.stand, {this.ausCache = false, this.fehler});
+  const NewsStand(this.artikel, this.stand,
+      {this.termine = const [], this.regeln = const [], this.ausCache = false, this.fehler});
 }
 
 class NewsDienst {
@@ -58,7 +95,18 @@ class NewsDienst {
     final j = jsonDecode(text) as Map<String, dynamic>;
     final l = [for (final a in (j['artikel'] as List? ?? const [])) NewsArtikel.ausJson(a as Map<String, dynamic>)]
       ..sort((a, b) => b.datum.compareTo(a.datum));
-    return NewsStand(l, (j['stand'] ?? '') as String, ausCache: ausCache, fehler: fehler);
+    final termine = <EventTermin>[];
+    for (final x in (j['kalender'] as List? ?? const [])) {
+      try {
+        termine.add(EventTermin.ausJson(x as Map<String, dynamic>));
+      } catch (_) {}
+    }
+    termine.sort((a, b) => a.start.compareTo(b.start));
+    return NewsStand(l, (j['stand'] ?? '') as String,
+        termine: termine,
+        regeln: [for (final x in (j['regeln'] as List? ?? const [])) x as String],
+        ausCache: ausCache,
+        fehler: fehler);
   }
 
   static Future<NewsStand> laden() async {

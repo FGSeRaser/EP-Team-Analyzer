@@ -328,5 +328,9 @@ void main() {
     final artikel = [for (final a in j['artikel'] as List) NewsArtikel.ausJson(a as Map<String, dynamic>)];
     expect(artikel, isNotEmpty);
     expect(artikel.first.titel, isNotEmpty);
+    final t = EventTermin.ausJson({'name': 'Goblin Village', 'symbol': '👺', 'start': '2026-11-20T07:00Z', 'ende': '2026-11-24T07:00Z', 'artikel': ''});
+    expect(t.dauer.inDays, 4);
+    expect(t.laeuft(DateTime.utc(2026, 11, 21)), isTrue);
+    expect(t.laeuft(DateTime.utc(2026, 11, 25)), isFalse);
   });
 }
