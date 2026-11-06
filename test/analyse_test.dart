@@ -16,6 +16,7 @@ import 'package:ep_team_analyzer/erkennung/titan_text.dart';
 import 'package:ep_team_analyzer/daten/titan.dart';
 import 'package:ep_team_analyzer/daten/gegner_stand.dart';
 import 'package:ep_team_analyzer/daten/talente.dart';
+import 'package:ep_team_analyzer/daten/news.dart';
 import 'dart:math' as math;
 import 'dart:typed_data';
 import 'package:ep_team_analyzer/daten/team_builder.dart';
@@ -315,5 +316,17 @@ void main() {
     expect(tank.positionen.length, 3);
     expect(titan.gabeln.length, 9);
     expect(TalentAnalyse.empfehlen(held, r, st, Einsatz.titan, 'flanke', meister: false).gabeln.length, 7);
+  });
+
+  test('News: Held des Monats, erwähnte Helden, News-Datei', () {
+    final hdm = heldenDesMonats(db, 2026, 11);
+    expect(hdm, isNotEmpty);
+    expect(hdm.first.sterne, 5);
+    final namen = erwaehnteHelden(db, 'Balance changes: Adelitza gets +10% damage.').map((h) => h.nameEn);
+    expect(namen, contains('Adelitza'));
+    final j = jsonDecode(File('news/news.json').readAsStringSync()) as Map<String, dynamic>;
+    final artikel = [for (final a in j['artikel'] as List) NewsArtikel.ausJson(a as Map<String, dynamic>)];
+    expect(artikel, isNotEmpty);
+    expect(artikel.first.titel, isNotEmpty);
   });
 }

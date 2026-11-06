@@ -125,7 +125,7 @@ def main():
         vorher = alt.get(a["url"])
         if vorher and vorher.get("text"):
             a.update({k: vorher[k] for k in ("kurz", "text") if k in vorher})
-        elif i < DETAILS:
+        elif i < DETAILS or re.search(r"(balanc|release notes|buff|nerf)", a["titel"].lower()):
             kurz, text = artikel_text(a["url"])
             a["kurz"], a["text"] = kurz, text
             time.sleep(1)

@@ -14,6 +14,7 @@ import 'daten/updater.dart';
 import 'ui/bereiche.dart';
 import 'ui/helden_liste.dart';
 import 'ui/info_seite.dart';
+import 'ui/news_seite.dart';
 import 'ui/sammlung_scope.dart';
 import 'ui/sammlung_seite.dart';
 import 'ui/update_dialog.dart';
@@ -119,18 +120,30 @@ class _StartseiteState extends State<Startseite> {
           SammlungSeite(db: db),
           TeamsBereich(db: db),
           WissenBereich(db: db),
+          NewsSeite(db: db),
           InfoSeite(db: db),
         ];
         return Scaffold(
           body: IndexedStack(index: _tab, children: seiten),
           bottomNavigationBar: NavigationBar(
             selectedIndex: _tab,
-            onDestinationSelected: (i) => setState(() => _tab = _letzterTab = i),
+            onDestinationSelected: (i) {
+              setState(() => _tab = _letzterTab = i);
+              if (i == 4) newsGelesen();
+            },
             destinations: [
               NavigationDestination(icon: const Icon(Icons.people), label: tx('Helden', 'Heroes')),
               NavigationDestination(icon: const Icon(Icons.inventory_2), label: tx('Meine', 'Mine')),
               NavigationDestination(icon: const Icon(Icons.groups), label: 'Teams'),
               NavigationDestination(icon: const Icon(Icons.school), label: tx('Wissen', 'Knowledge')),
+              NavigationDestination(
+                icon: ValueListenableBuilder<int>(
+                  valueListenable: ungeleseneNews,
+                  builder: (_, n, kind) => Badge(isLabelVisible: n > 0, label: Text('$n'), child: kind),
+                  child: const Icon(Icons.newspaper),
+                ),
+                label: 'News',
+              ),
               const NavigationDestination(icon: Icon(Icons.info_outline), label: 'Info'),
             ],
           ),
