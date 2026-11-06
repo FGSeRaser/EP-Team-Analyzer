@@ -15,6 +15,7 @@ import 'package:ep_team_analyzer/erkennung/truppen_text.dart';
 import 'package:ep_team_analyzer/erkennung/titan_text.dart';
 import 'package:ep_team_analyzer/daten/titan.dart';
 import 'package:ep_team_analyzer/daten/gegner_stand.dart';
+import 'package:ep_team_analyzer/daten/talente.dart';
 import 'dart:math' as math;
 import 'dart:typed_data';
 import 'package:ep_team_analyzer/daten/team_builder.dart';
@@ -293,5 +294,26 @@ void main() {
     expect(e.sterne, 11);
     expect(e.farbe, 'gruen');
     expect(e.eigenschaften, contains('reflekt'));
+  });
+
+  test('Hero-Analyser: Talent-Raster und Empfehlung je Einsatz', () {
+    final raster = TalentRaster.ausJson(File('assets/data/talente.json').readAsStringSync());
+    expect(raster.length, 10);
+    final monk = raster['monk']!;
+    expect(monk.gabeln.length, 9);
+    expect(monk.pflicht.firstWhere((k) => k.nr == 10).typ, 'crit');
+    expect(monk.pflicht.firstWhere((k) => k.nr == 20).typ, 'mana');
+
+    final held = db.helden.firstWhere((h) =>
+        !h.kommend && h.sterne == 5 && h.kostuemVon == null && raster.containsKey(h.klasseKey) && h.effekte.contains('hit_single'));
+    final st = GegnerStand.standard(held).werte(db, held);
+    final r = raster[held.klasseKey]!;
+    final titan = TalentAnalyse.empfehlen(held, r, st, Einsatz.titan, 'flanke');
+    final tank = TalentAnalyse.empfehlen(held, r, st, Einsatz.verteidigung, 'tank');
+    expect(titan.summe['atk']!, greaterThan(tank.summe['atk']!));
+    expect(tank.summe['def']! + tank.summe['hp']!, greaterThan(titan.summe['def']! + titan.summe['hp']!));
+    expect(tank.positionen.length, 3);
+    expect(titan.gabeln.length, 9);
+    expect(TalentAnalyse.empfehlen(held, r, st, Einsatz.titan, 'flanke', meister: false).gabeln.length, 7);
   });
 }

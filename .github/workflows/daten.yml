@@ -28,13 +28,14 @@ jobs:
         run: |
           git clone --depth 1 --filter=blob:none --no-checkout https://github.com/heroplan/heroplan.github.io.git heroplan
           cd heroplan
-          git sparse-checkout set --no-cone data/ 'langs_json/*_de.json' 'langs_json/*_en.json' imgs/hero_icon/
+          git sparse-checkout set --no-cone data/ 'langs_json/*_de.json' 'langs_json/*_en.json' imgs/hero_icon/ talent-tree.js
           git checkout
 
       - name: Datenbank und Fingerabdrücke bauen
         run: |
           python3 tools/build_helden_db.py heroplan
           python3 tools/build_portraits.py heroplan
+          python3 tools/build_talente.py heroplan
 
       - name: Änderungen committen
         run: |

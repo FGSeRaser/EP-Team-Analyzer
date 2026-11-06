@@ -10,6 +10,7 @@ import '../daten/truppen.dart';
 import 'besitz_bearbeiten.dart';
 import 'helden_liste.dart';
 import 'sammlung_scope.dart';
+import 'held_analyse_seite.dart';
 import 'widgets.dart';
 
 String rollenKurz(String k) => switch (k) {
@@ -61,7 +62,13 @@ class HeldDetail extends StatelessWidget {
     final besitz = SammlungScope.of(context).besitz(held.id);
 
     return Scaffold(
-      appBar: AppBar(title: Text(held.anzeigeName)),
+      appBar: AppBar(title: Text(held.anzeigeName), actions: [
+        IconButton(
+          tooltip: tx('Talente analysieren', 'Analyze talents'),
+          icon: const Icon(Icons.account_tree),
+          onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => HeldAnalyseSeite(db: db, start: held))),
+        ),
+      ]),
       floatingActionButton: held.kommend
           ? null
           : FloatingActionButton.extended(

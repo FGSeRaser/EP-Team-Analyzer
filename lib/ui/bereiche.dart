@@ -7,6 +7,7 @@ import '../daten/datenbank.dart';
 import '../daten/sprache.dart';
 import 'effekte_seite.dart';
 import 'gegner_seite.dart';
+import 'held_analyse_seite.dart';
 import 'team_builder_seite.dart';
 import 'team_check.dart';
 import 'truppen_seite.dart';
@@ -89,6 +90,13 @@ class TeamsBereich extends StatelessWidget {
           tx('Team-Check', 'Team check'),
           tx('5 Helden selbst wählen und Stärken und Lücken sehen.', 'Pick 5 heroes yourself and see strengths and gaps.'),
           () => TeamCheck(db: db),
+        ),
+        _Eintrag(
+          Icons.account_tree,
+          'Hero-Analyser',
+          tx('Beste Talente (Angriff, Verteidigung, Leben, Mana) je Held und Position – und ob eine andere Position besser passt.',
+              'Best talents (attack, defense, health, mana) per hero and position – and whether another position fits better.'),
+          () => HeldAnalyseSeite(db: db),
         ),
       ]);
 }
