@@ -1,6 +1,6 @@
 {
  "quelle": "empiresandpuzzles.com/news",
- "stand": "2026-11-06T13:45Z",
+ "stand": "2026-11-06T13:53Z",
  "artikel": [
   {
    "titel": "Finalizing Renewal 2026 & the Path Ahead",
@@ -158,6 +158,8 @@
    "titel": "August 2026 Balance Update II – Details & Release Notes",
    "datum": "2026-08-24",
    "url": "https://www.empiresandpuzzles.com/news/august-2026-balance-update-2-details-and-release-notes",
+   "kurz": "August 2026 Balance Update – Details & Release Notes",
+   "text": "August 2026 Balance Update II – Details & Release Notes\nAugust 24, 2026\n\n\n\nNote: This balance change is now live!\nFull details of the changes are as follows:\nChampion family\n• Family bonus\n• Defense buff added\n• NEW: +20%/+30%/+40% defense (for 1/2/3 members)\n\n• Attack buff adjusted\n• OLD: +35%/+50%/+65% attack (for 1/2/3 members)\n\n• NEW: +30%/+40%/+50% attack (for 1/2/3 members)\n\n• Satori\n• Passive Skills: Mana on Buff Dispel, Health Boost on Buff Dispel\n• Now activate on each attempted dispel on the Hero with the Skill(s), not just when buffs are removed\n\nLegends families\n• Family bonuses\n• Legends family bonuses are now granted for Heroes of the same element, instead of members of the same Legends family\n\n• Legends family bonuses for 2+ Heroes no longer extend Element Links to allies of all elements\n\n• Buffed various family bonus effects\n• Legends 2018, 2023\n• Defense boost increased: +10/15/20% -> +15/20/25% defense\n\n• Legends 2019, 2022\n• Attack boost increased: +10/15/20% -> +15/20/25% attack\n\n• Legends 2020\n• Heal buff increased: +10/15/20% -> +20/25/30% healing\n\n• Legends 2021\n• Critical chance buff increased: +10/15/20% -> +20/25/30% chance for critical hits\n\n• Buffed various Element Links\n• Aeron, Alasie, Gravemaker, Gregorion, Drake Fong\n• +5% attack and +5% defense -> +15% attack and +15% defense\n\n• Khiona, Aegir, Zimkitha, Evelyn, Onatel, Suzuna, Colt, Caravita\n• 4% -> 5% health recovered each turn\n\n• Kunchen, Frida, Anzogh, Margaret, Ranvir\n• +46% -> +60% defense against the stronger element\n\n• Seshat, Miki, Grazul, Kingston, Neith\n• +4% -> +5% mana generation\n\n• Grimble, Vela, Jean-François, Telluria, Malosi\n• +10% -> +20% critical chance\n\n• Clarissa, Raffaele, Noor, Zocc, Bai Yeong, Mystia, Eliane, Claeg, May, Akilius\n• +30% -> +40% defense against Special Skills\n\n• Zulag, Glenda, Reuben, Bertila, Uraeus\n• Minion HP increased: 6% -> 7%\n\n• Minion attack increased: 10% -> 12%\n\n• Malicna, Frosth, Yang Mai, Elradir, Devana\n• Amount of mana gained each turn increased\n\n• Chakkoszrot, Alexandrine, Russell, Balbar, Hanitra\n• +10% -> +15% healing received\n\n• Viscaro, Iris, Silvaria\n• +10% -> +20% attack\n\n• Zagrog, Kara, Arfanias, Klaern\n• +10% -> 20% defense\n\n• Roughian & Nurgib, Viselus, Gilligan, Turgruk\n• 5% -> 6% chance to dodge status ailments\n\n• Neema, Leadria, Zora, Gladius, Anoushka\n• +10% -> +15% Special Skill damage\n\n• Zarga, Bo & Runt, Aviana, Sini, Sir Casmir\n• +5% -> +6% dodge chance\n\nAugust Heroes of the Month\n• Zocc\n• Direct damage increased: 320% -> 340%\n\n• Chakkoszrot\n• Direct damage increased: 295% -> 325%\n\n• Tahir\n• Direct damage increased\n• Base damage: 400% -> 420%\n\n• Max damage: 600% -> 630%\n\n• Sir Casmir\n• Damage on enemy Special Skill increased: 600% -> 630%\n\n• Maple\n• Direct damage increased: 300% -> 320%",
    "arten": [
     "balance",
     "version"
@@ -184,7 +186,10 @@
    "titel": "Version 88 Release Notes & Status",
    "datum": "2026-08-18",
    "url": "https://www.empiresandpuzzles.com/news/version-88-release-notes-and-status",
+   "kurz": "Version 88 Release Notes & Status",
+   "text": "Version 88 Release Notes & Status\nAugust 18, 2026\n\n\n\nStatus\nAug 17, 2026 12:10 PM UTC: Android rollout started. We hope to do the same for iOS soon.\nRelease Notes\n[NEW & UPDATED CONTENT]\nLegends refresh\nThe Tavern of Legends reopens as a sports bar. Check out sporty costumes for Heroes of the Month, and more Champions. Earn more Summon Coins from stage rewards! Received a 5* Hero from the Legends Summon, but it wasn't quite what you were looking for? Use a free reroll to draw another 5* Hero, with guaranteed ascension levels!\nDragons vs Demons\nSend your Dragons to defend a village under attack from winged demons, and reclaim valuable loot for the Heroes of your Stronghold\nQuick Brawls\nNew 1-week Raid Brawl events with extra rules, and buffs for unique Heroes\nHarvest Festival\nAs Fall rolls in, the Harpies rise! Meet a pair of Heroes from an all-new Family in our incredible Harvest Summon, where every summon guarantees 1-9 bonus draws.\nRoster and auto-select filtering improvements\nHero roster now includes toggles to show Heroes that are currently trainable, ascendable, and limit breakable. New options for auto-select can be set based on element, max rarity, and family. Auto-select for Troops and Dragons can also be set by element and rarity.\n[IMPROVEMENTS & FIXES]\nImprovements\n• Updated disclaimer text re: costumes in Max Power Preview\n\n• New Raid matchmaking logic that takes trophy count and team power into account to provide a more balanced PvP experience for early game players\n\n• The ability to refill energy directly from the resource bar has been extended to all types of energies, including Tower events, Temple quest, and Mythic Titan\n\n• Improved UI for Welcome Back tasklist to indicate that all the tasks have been completed and all the gifts claimed\n\n• Ambush status effects’ additional info text was adjusted to better match the functionality\n\n• Added animation in Raids view when receiving trophies after a raid victory\n\n• Updated additional info text on Astral Beam to state it is stronger against enemies with boosted health\n\n• Platinum Shop UI/UX improvements. Tradable items amount in inventory visible inside the trade, added gift icon to Trader when free item unclaimed\n\n• Windfall Temple event UI/UX improvements. Both Furor icons have been combined into one, and the Aura icon on hero portraits now shows remaining uses. Temple event screen now shows reward odds\n\n• Secret bonus draw has been removed from the updated Legends Summon\n\nFixes\n• Hero portraits should now function correctly in certain revival interactions, no more plain gray hero portraits!\n\n• Fixed an issue where certain effects, like corrosive ailments, had their power adjusted unintentionally when the effect duration was increased.\n\n• Fixed an issue with Alliance Featured Message sometimes cutting off\n\n• Fixed an issue where claiming gems in exchange for unused Tokens of Appreciation would sometimes cause an error\n\n• Status effects whose duration is reset by Special Skills now have the correct duration for attacking Heroes\n\n• Fixed an issue where players would sometimes receive an empty raid history dialogue after an extended absence\n\n• Fixed an issue where an event popup would sometimes unintentionally appear while the related quest is not visible to players",
    "arten": [
+    "balance",
     "version"
    ]
   },
@@ -192,6 +197,8 @@
    "titel": "August 2026 Balance Update – Details & Release Notes",
    "datum": "2026-08-11",
    "url": "https://www.empiresandpuzzles.com/news/august-2026-balance-update-details-and-release-notes",
+   "kurz": "August 2026 Balance Update – Details & Release Notes",
+   "text": "August 2026 Balance Update – Details & Release Notes\nAugust 11, 2026\n\n\n\nNote: This balance change is now live!\nFull details of the changes are as follows:\nConstruct family\n• Passive Skill: Minion Core\n• Killer Bot Minion\n• Health reduced: 33% -> 25%\n\n• Attack increased: 55% -> 110%\n\n• The Minion no longer destroys Minions from hit targets\n\n• Healing increased: 5% -> 7%\n\n• Wither on hit reduced: -50 -> -40\n\n• Sylosis\n• Mana speed changed: Fast -> Average\n\n• Tengo\n• Direct damage increased: 500% -> 520%\n\n• Heal per damage dealt increased: 30% -> 35%\n\n• Delayed damage increased\n• Min damage: 480 -> 579\n\n• Max damage: 1243 -> 1342\n\n• Elx\n• Direct damage increased: 180% -> 190%\n\n• Damage against Nature enemies increased: 846 -> 941\n\n• Featherweight\n• Direct damage increased: 400% -> 480%\n\nZerfain\n• Increased damage on consecutive Special Skill hits\n\nJuly Heroes of the Month\n• Noor\n• Direct heal increased: 15% -> 20%\n\n• Elradir\n• Direct damage increased: 375% -> 400%\n\n• Klaern\n• Direct damage increased: 300% -> 330%\n\n• Water damage increased: 400 -> 500 over 5 turns\n\n• Cinisia\n• Direct damage increased: 300% -> 330%\n\n• Sini\n• Direct damage increased: 280% -> 300%\n\n• Florenna\n• Poison damage increased: 912 -> 1017 over 3 turns\n\nFixes\n• Changing Tides mana speed\n• Fixed a calculation error which would make heroes with Changing Tides slower than intended when their mana speed is supposed to be equal to Average",
    "arten": [
     "balance",
     "version"
@@ -258,6 +265,8 @@
    "titel": "June 2026 Balance Update II – Details & Release Notes",
    "datum": "2026-06-25",
    "url": "https://www.empiresandpuzzles.com/news/june-2026-balance-update-2-details-and-release-notes",
+   "kurz": "Version 85 Release Notes & Status",
+   "text": "June 2026 Balance Update II – Details & Release Notes\nJune 25, 2026\n\n\n\nNote: This balance update is now live!\n\nFull details of the changes are as follows:\nShady Scoundrel family\n• Family bonus\n• Number of activations is now limited to twice per turn\n\n• Lane\n• Stats increased\n• Attack: 1283 -> 1374\n\n• Defense: 1324 -> 1409\n\n• Health: 2315 -> 2395\n\n• Duval\n• Stats increased\n• Attack: 1306 -> 1392\n\n• Defense: 1303 -> 1388\n\n• Health: 2298 -> 2391\n\nMusketeer family\n* Passive Skill : Damage on Special Skill and Cover Damage\n\n• Added a cap to how much damage the Passive Skill can reflect to enemies: max 600 damage\n• Only affects Epic and Rare members of the family\n\nToon Athena\n• Duration of defense ailment increased: 2 -> 4 turns\n\nJune Heroes of the Month\n• Raffaele\n• Heal over time increased: 1080 -> 1200 HP over 4 turns\n\n• Elradir\n• Direct damage increased: 345% -> 375%\n\n• Arfanias\n• Direct damage increased\n\n• Base damage: 460% -> 490%\n\n• Max damage: 650% -> 680%\n\n• Skargremar\n• Direct damage increased: 345% -> 375%\n\n• Accuracy reduction buffed: -35% -> -40%\n\n• Aviana\n• Direct damage increased: 330% -> 360%\n\n• Akilius\n• Direct damage increased: 490% -> 540%\n\n• Accuracy reduction buffed: -45% -> 50%\n\nFixes\n• Passive Skill: Nine Lives\n• Fixed issue with the revive being preventable with certain status ailments\n\n• Fixed issue with the passive reviving heroes with an inconsistent amount of mana\n\n• Fimafeng\n• The Special Skill could previously cleanse even uncleansable ailments. The Skill now only cleanses cleansable ailments, as intended.",
    "arten": [
     "balance",
     "version"
@@ -284,7 +293,10 @@
    "titel": "Version 87 Release Notes & Status",
    "datum": "2026-06-16",
    "url": "https://www.empiresandpuzzles.com/news/version-87-release-notes-and-status",
+   "kurz": "Version 81 Release Notes & Status",
+   "text": "Version 87 Release Notes & Status\nJune 16, 2026\n\n\n\nStatus\nJun 16, 2026 11:00 AM UTC: Android rollout started. We hope to do the same for iOS soon.\nRelease Notes\n[NEW & UPDATED CONTENT]\nDive into Finnish myth in the Kalevala seasonal event!\nReturn to Pohjala to face the Kalevala quest with new mythical Heroes and Costumes. You’ll need “sisu” to beat the Brawl!\nShady Scoundrels invade Goblin Village\nLane and Duval are joined by more Scoundrels as their family expands in the long-awaited return of Goblin Village! Plus the first Goblin Costumes with an added Passive Skill\nThe final area of Dragon Adventure unlocks!\nIs your Dragon team ready to scale Mount Oblivion and face the ultimate Dragon boss fight?\n[IMPROVEMENTS & FIXES]\nImprovements\n• Text description of the “Destroy Fiends on Special” passive skill updated to reference Mega Fiends\n\n• Updated text of Limeboire’s buff steal to clarify targeting\n\n• Improved description of “Branded by the Old Ones” passive skill\n\n• A new info button was added to view mission rewards when there are more than 3 rewards available for a mission\n\n• Added new animations on status effect icons when their durations are manipulated\n\n• All “Reflect” status effects are now consistently categorised as defensive buffs for the purposes of bypassing\n\nFixes\n• Stat boosts from Hero League Advantage now display correctly on Hero cards\n\n• Fixed an issue where minions would take less damage than expected when their owner was in a ghost form\n\n• Fixed an issue where the game could crash when the Hero League Summon expired while the summon view was open\n\n• Killer Bot minions’ inherited stats now scale correctly based on the Minion Core’s charge level\n\n• Fixed an issue where some Heroes/Costumes eligible for a quest were not correctly sorted to the top of the roster in the “Edit Team” view\n\n• Fixed an issue where Dragon team power was displayed incorrectly in Raid screens when the “First Strike” tournament rule was active\n\n• The “Skip” button on the final story screens of Sunbay Party now works correctly\n\n• Fixed an issue where the rules screen in the Windfall Temple event would sporadically jump back to the top while scrolling\n\n• Fixed an issue where the Goblin Balloon tutorial would not display under certain conditions",
    "arten": [
+    "balance",
     "version"
    ]
   },
@@ -308,6 +320,8 @@
    "titel": "June 2026 Balance Update – Details & Release Notes",
    "datum": "2026-06-08",
    "url": "https://www.empiresandpuzzles.com/news/june-2026-balance-update-details-and-release-notes",
+   "kurz": "Version 85 Release Notes & Status",
+   "text": "June 2026 Balance Update – Details & Release Notes\nJune 8, 2026\n\n\n\nNote: This balance change is now live!\n\nFull details of the changes are as follows:\nNidavellir and Myrkheim Realms\n• New Passive Skill added: Resist Stealing\n• Grants immunity to stealing and Ransacking\n\nRonin family\n• Passive Skill added for all members of the family: Weaker Minions\n\n• Mikanagi Miran\n• The x1 Mana Charge now also inflicts a defense reduction stack\n• NEW: Stack (Max 10); Each hit gives its target -5% defense.\n\nNinja family\n• Passive Skill added: Weaker Minions\n• Added for members of the family that did not already have this Skill\n\nBeach Party family\n• Flip (Costume)\n• Resist Water Passive Skill replaced with Empowered Resist Water\n• OLD: Grants immunity to status ailments that dealt Water damage.\n\n• NEW: Grants immunity to status ailments that dealt Water damage. Boosts health by 450 and increases mana by 5% on each resist.\n\nMay Heroes of the Month\n• Clarissa\n• Direct damage increased: 175% -> 185%\n\n• Poison damage increased: 344 -> 460 damage over 2 turns\n\n• Yang Mai\n• Direct damage increased: 370% -> 400%\n\n• Chance for additional hits increased: 60% -> 65%\n\n• Suzuna\n• Heal over time increased: 855 -> 960 HP over 3 turns\n\nFixes\n• Legendary Troops leveling\n• Some under-the-hood refactoring results in minor changes to stat bonuses while leveling troops from min to max\n\n• Stat bonuses at max level are unchanged\n\n• Ivete and Pendulus Clonk\n• Increased healing from \"Heal When Status Ailment Expires or is Cleared\" passive skill to be in line with other members of the Beauty and the Beast family. Healing 10% -> 15%, technically the passive changed",
    "arten": [
     "balance",
     "version"
@@ -362,5 +376,314 @@
     "statistik"
    ]
   }
+ ],
+ "kalender": [
+  {
+   "name": "Tavern of Legends",
+   "symbol": "🌟",
+   "start": "2026-09-25T07:00Z",
+   "ende": "2026-09-29T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/october-2026-calendar-of-events"
+  },
+  {
+   "name": "Covenant Quest",
+   "symbol": "✨",
+   "start": "2026-09-26T07:00Z",
+   "ende": "2026-09-29T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/october-2026-calendar-of-events"
+  },
+  {
+   "name": "Ninja Tower",
+   "symbol": "🥷",
+   "start": "2026-09-27T07:00Z",
+   "ende": "2026-10-02T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/october-2026-calendar-of-events"
+  },
+  {
+   "name": "Shadows of the Deep",
+   "symbol": "🌫️",
+   "start": "2026-09-29T07:00Z",
+   "ende": "2026-10-03T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/october-2026-calendar-of-events"
+  },
+  {
+   "name": "Contest of Elements",
+   "symbol": "❄️",
+   "start": "2026-10-02T07:00Z",
+   "ende": "2026-10-06T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/october-2026-calendar-of-events"
+  },
+  {
+   "name": "Costume Chamber",
+   "symbol": "🗝️",
+   "start": "2026-10-03T07:00Z",
+   "ende": "2026-10-07T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/october-2026-calendar-of-events"
+  },
+  {
+   "name": "Demon Raiders",
+   "symbol": "👿",
+   "start": "2026-10-03T07:00Z",
+   "ende": "2026-10-06T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/october-2026-calendar-of-events"
+  },
+  {
+   "name": "Dragon Cave",
+   "symbol": "🐲",
+   "start": "2026-10-03T07:00Z",
+   "ende": "2026-10-06T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/october-2026-calendar-of-events"
+  },
+  {
+   "name": "Alliance Quest: Brave and the Beautiful",
+   "symbol": "🤺",
+   "start": "2026-10-06T07:00Z",
+   "ende": "2026-10-11T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/october-2026-calendar-of-events"
+  },
+  {
+   "name": "Astral Plane",
+   "symbol": "✨",
+   "start": "2026-10-08T07:00Z",
+   "ende": "2026-10-12T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/october-2026-calendar-of-events"
+  },
+  {
+   "name": "Visiting Outfitter",
+   "symbol": "👗",
+   "start": "2026-10-08T07:00Z",
+   "ende": "2026-10-11T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/october-2026-calendar-of-events"
+  },
+  {
+   "name": "War of the Three Kingdoms",
+   "symbol": "⚔️",
+   "start": "2026-10-11T07:00Z",
+   "ende": "2026-10-16T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/october-2026-calendar-of-events"
+  },
+  {
+   "name": "Windfall Temple",
+   "symbol": "🛕",
+   "start": "2026-10-16T07:00Z",
+   "ende": "2026-10-20T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/october-2026-calendar-of-events"
+  },
+  {
+   "name": "Demon Raiders",
+   "symbol": "👿",
+   "start": "2026-10-17T07:00Z",
+   "ende": "2026-10-20T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/october-2026-calendar-of-events"
+  },
+  {
+   "name": "Charming Costume Chamber",
+   "symbol": "🗝️",
+   "start": "2026-10-18T07:00Z",
+   "ende": "2026-10-22T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/october-2026-calendar-of-events"
+  },
+  {
+   "name": "Sanguine Feast - New Halloween Event",
+   "symbol": "🎃",
+   "start": "2026-10-19T07:00Z",
+   "ende": "2026-11-16T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/november-2026-calendar-of-events"
+  },
+  {
+   "name": "Ninja Tower",
+   "symbol": "🥷",
+   "start": "2026-10-20T07:00Z",
+   "ende": "2026-10-25T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/october-2026-calendar-of-events"
+  },
+  {
+   "name": "Shadows of the Deep",
+   "symbol": "🌫️",
+   "start": "2026-10-22T07:00Z",
+   "ende": "2026-10-26T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/october-2026-calendar-of-events"
+  },
+  {
+   "name": "Goblin Village",
+   "symbol": "👺",
+   "start": "2026-10-25T07:00Z",
+   "ende": "2026-10-29T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/november-2026-calendar-of-events"
+  },
+  {
+   "name": "Tavern of Legends",
+   "symbol": "🌟",
+   "start": "2026-10-26T07:00Z",
+   "ende": "2026-10-30T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/november-2026-calendar-of-events"
+  },
+  {
+   "name": "Costume Chamber",
+   "symbol": "🗝️",
+   "start": "2026-10-28T07:00Z",
+   "ende": "2026-11-01T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/november-2026-calendar-of-events"
+  },
+  {
+   "name": "Vigilant Vegetables",
+   "symbol": "🫜",
+   "start": "2026-10-29T07:00Z",
+   "ende": "2026-11-02T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/november-2026-calendar-of-events"
+  },
+  {
+   "name": "Dragon Cave",
+   "symbol": "🐲",
+   "start": "2026-10-30T07:00Z",
+   "ende": "2026-11-02T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/november-2026-calendar-of-events"
+  },
+  {
+   "name": "Contest of Elements",
+   "symbol": "🔥",
+   "start": "2026-11-02T07:00Z",
+   "ende": "2026-11-06T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/november-2026-calendar-of-events"
+  },
+  {
+   "name": "Astral Plane",
+   "symbol": "✨",
+   "start": "2026-11-04T07:00Z",
+   "ende": "2026-11-08T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/november-2026-calendar-of-events"
+  },
+  {
+   "name": "War of the Three Kingdoms",
+   "symbol": "⚔️",
+   "start": "2026-11-06T07:00Z",
+   "ende": "2026-11-11T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/november-2026-calendar-of-events"
+  },
+  {
+   "name": "Monster Island",
+   "symbol": "🏝️",
+   "start": "2026-11-07T07:00Z",
+   "ende": "2026-11-11T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/november-2026-calendar-of-events"
+  },
+  {
+   "name": "Costume Chamber",
+   "symbol": "🗝️",
+   "start": "2026-11-09T07:00Z",
+   "ende": "2026-11-13T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/november-2026-calendar-of-events"
+  },
+  {
+   "name": "Alliance Quest: Clash of Knights",
+   "symbol": "🏰",
+   "start": "2026-11-11T07:00Z",
+   "ende": "2026-11-16T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/november-2026-calendar-of-events"
+  },
+  {
+   "name": "Mythic Titan",
+   "symbol": "🐍",
+   "start": "2026-11-12T07:00Z",
+   "ende": "2026-11-14T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/november-2026-calendar-of-events"
+  },
+  {
+   "name": "Hero Coach",
+   "symbol": "🏅",
+   "start": "2026-11-14T07:00Z",
+   "ende": "2026-11-17T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/november-2026-calendar-of-events"
+  },
+  {
+   "name": "Hero League Sign-Up",
+   "symbol": "🗡️",
+   "start": "2026-11-16T07:00Z",
+   "ende": "2026-11-23T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/november-2026-calendar-of-events"
+  },
+  {
+   "name": "Windfall Temple",
+   "symbol": "🛕",
+   "start": "2026-11-16T07:00Z",
+   "ende": "2026-11-20T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/november-2026-calendar-of-events"
+  },
+  {
+   "name": "Shadows of the Deep",
+   "symbol": "🌫️",
+   "start": "2026-11-18T07:00Z",
+   "ende": "2026-11-22T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/november-2026-calendar-of-events"
+  },
+  {
+   "name": "Goblin Village",
+   "symbol": "👺",
+   "start": "2026-11-20T07:00Z",
+   "ende": "2026-11-24T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/november-2026-calendar-of-events"
+  },
+  {
+   "name": "Covenant Quest",
+   "symbol": "✨",
+   "start": "2026-11-21T07:00Z",
+   "ende": "2026-11-24T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/november-2026-calendar-of-events"
+  },
+  {
+   "name": "Tavern of Legends",
+   "symbol": "🌟",
+   "start": "2026-11-22T07:00Z",
+   "ende": "2026-11-26T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/november-2026-calendar-of-events"
+  },
+  {
+   "name": "Black Friday",
+   "symbol": "🌌",
+   "start": "2026-11-23T07:00Z",
+   "ende": "2026-11-30T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/november-2026-calendar-of-events"
+  },
+  {
+   "name": "Ninja Tower",
+   "symbol": "🥷",
+   "start": "2026-11-24T07:00Z",
+   "ende": "2026-11-29T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/november-2026-calendar-of-events"
+  },
+  {
+   "name": "Charming Costume Chamber",
+   "symbol": "🗝️",
+   "start": "2026-11-26T07:00Z",
+   "ende": "2026-11-30T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/november-2026-calendar-of-events"
+  },
+  {
+   "name": "Dragon Cave",
+   "symbol": "🐲",
+   "start": "2026-11-27T07:00Z",
+   "ende": "2026-11-30T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/november-2026-calendar-of-events"
+  },
+  {
+   "name": "Vigilant Vegetables",
+   "symbol": "🫜",
+   "start": "2026-11-29T07:00Z",
+   "ende": "2026-12-03T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/november-2026-calendar-of-events"
+  },
+  {
+   "name": "Soul Exchange",
+   "symbol": "♻️",
+   "start": "2026-11-30T07:00Z",
+   "ende": "2026-12-03T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/november-2026-calendar-of-events"
+  }
+ ],
+ "regeln": [
+  "Season II Atlantis Rises, Season III Valhalla Forever, Season IV Tremors of Underwild, Season V Judgment of Dunes, Untold Tales I and Untold Tales II will rotate every 4 days without pause.",
+  "Ancient Underroot will have a 4 day event starting every Tuesday.",
+  "Legendary Troop Quest will have a 4 day event starting every other Thursday.",
+  "Demon Raiders will have a 3 day event starting every other Saturday."
  ]
 }
