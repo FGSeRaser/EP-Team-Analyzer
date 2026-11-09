@@ -1,7 +1,20 @@
 {
  "quelle": "empiresandpuzzles.com/news",
- "stand": "2026-11-09T06:23Z",
+ "stand": "2026-11-09T22:21Z",
  "artikel": [
+  {
+   "titel": "Version 90 Release Notes & Status",
+   "datum": "2026-11-09",
+   "url": "https://www.empiresandpuzzles.com/news/version-90-release-notes-and-status",
+   "kurz": "Version 89 Release Notes & Status",
+   "text": "Version 90 Release Notes & Status\nNovember 9, 2026\n\n\n\nRelease Notes\n[NEW & UPDATED CONTENT]\n\nBlack Friday goes West!\nCheck the wanted posters! Wild West Heroes are coming to chase bounties in our incredible Black Friday Summon. Like last year, this Summon only includes Legendary Heroes released in the past 2 years, and all summoned Heroes come with free ascension levels!\n\nHero League improvements\nUpdates to Hero League emphasize active play and featured Heroes. We’ve recalculated defense grades and reduced points to have less impact on your overall score, and we’ve added a difficulty bonus that awards more points for beating a stronger opponent. The League Advantage for featured Families now only resists effects cast by Heroes from non-featured Families.\n\nAlliance Quest: Clash of Knights\nThe original Alliance Quest makes a comeback. A new family of Boar knights has come to challenge the other armored clans for supremacy.\n\nBuilding renovations\nThe Stronghold quartermaster approved upgrade works for the Hero Academy and the Forge The time and resources required for Troop trainings in Hero Academy have been reduced. Forge crafting recipes 11-20 also see reduced resource costs.\n\n[IMPROVEMENTS & FIXES]\n\nImprovements\n\n• Insanity additional info text was updated to better match the functionality\n\n• Added an additional info box for Critical hit chances to better explain the functionality\n\n• Untold Tales Summon button now turns purple when a Mystic Summon is available\n\n• Updated Special Skill description for Stylish Costume heroes that deal minor damage to nearby enemies\n\n• Dances, Ballads, and other full removal effects no longer reduce Growth or Wither\n\n• Added animation for Thief's Opportunity passive activation\n\n• Updated the Platinum Shop icon\n\nFixes\n• Ghosts of Yang Jian Family's Vengeful Ghost effect now works correctly against targets with a \"Revive on Death\" status effect like Gooric's Slime Revive and Green Knight's self revive\n\n• Mikanagi Miran's special skills now works correctly against targets with a \"Revive on Death\" status effect like Gooric's Slime Revive and Green Knight's self revive\n\n• Fixed an issue with auto-selection of troops not considering resource storage capacity when leveling up. Now auto-select stops at max Food/Iron\n\n• Fixed an issue where the Dragonspire button's activation area was too large and overlapped with the raids button\n\n• Fixed an issue where the Raid Log would sometimes show revenge as available when it wasn't\n\n• Fixed an issue where players would sometimes get stuck in the Monster Island team edit screen after closing the “How to Play Monster Island” popup\n\n• Fixed an issue where a Fiend’s explosion damage to target and nearby enemies would be dodged by all when dodged by the target. Now each target needs to dodge the damage individually\n\n• Fixed an issue with the Camouflage status effect. When a defending Dryad Hero had Camouflage active, the Hero selected by the attacking player as a target would be deselected after casting a Special Skill\n\n• Fixed another issue with the Camouflage status effect. If a defending Dryad Hero was targeted by the attacker prior to activating Camouflage, the targeting would not be removed\n\n• Fixed an issue with some Special Skills that summon Fiends when they hit enemies. Previously, the summon would sometimes be dodged even if the hit landed. Now, both parts either hit or miss\n\n• Fixed an issue with some heroes' fiend summoning bypassing elemental reflection effects unintentionally\n\n• Fixed an issue where Special Skills with the Perfect Accuracy passive could be dodged by Heroes with Margaret’s dodge buff\n\n• Fixed an issue that could cause Legendary Troops to be equipped to Raid Tournament teams despite rarity restrictions",
+   "arten": [
+    "version"
+   ],
+   "titel_de": "",
+   "text_de": "",
+   "kurz_de": ""
+  },
   {
    "titel": "Scrolls of Aggregation #157",
    "datum": "2026-11-07",
@@ -450,15 +463,6 @@
    "arten": [
     "kalender",
     "event"
-   ],
-   "titel_de": ""
-  },
-  {
-   "titel": "A Hero’s Fate (Spring Raid Refresh Survey Results)",
-   "datum": "2026-05-21",
-   "url": "https://www.empiresandpuzzles.com/news/a-heros-fate-spring-raid-refresh-survey-results",
-   "arten": [
-    "info"
    ],
    "titel_de": ""
   }
