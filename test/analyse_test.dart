@@ -17,6 +17,7 @@ import 'package:ep_team_analyzer/daten/titan.dart';
 import 'package:ep_team_analyzer/daten/gegner_stand.dart';
 import 'package:ep_team_analyzer/daten/talente.dart';
 import 'package:ep_team_analyzer/daten/news.dart';
+import 'package:ep_team_analyzer/daten/chat_texte.dart';
 import 'dart:math' as math;
 import 'dart:typed_data';
 import 'package:ep_team_analyzer/daten/team_builder.dart';
@@ -342,5 +343,19 @@ void main() {
     expect(Held.ausJson({...roh, 'neu': 1, 'd': ''}).kommend, isTrue);
     final stand = jsonDecode(File('assets/data/stand.json').readAsStringSync()) as Map<String, dynamic>;
     expect((stand['dateien'] as Map).length, 4);
+  });
+
+  test('Chat-Tool: Farben, Größe und Emotes', () {
+    final t = chatParsen('[#6bf9ff]:star: Hallo\nWelt [#FF3333][%150]KRIEG :Swords: :gibtsnicht:');
+    expect(t.first.emote, 'star');
+    expect(t.first.farbe, 0xFF6BF9FF);
+    final welt = t.firstWhere((x) => x.text.contains('Welt'));
+    expect(welt.farbe, 0xFF6BF9FF, reason: 'Farbe gilt über Zeilen hinweg');
+    final krieg = t.firstWhere((x) => x.text.contains('KRIEG'));
+    expect((krieg.farbe, krieg.groesse), (0xFFFF3333, 1.5));
+    expect(t.any((x) => x.emote == 'swords'), isTrue);
+    expect(t.any((x) => x.unbekannt && x.text == ':gibtsnicht:'), isTrue);
+    expect(emotesKlein(':FLEX: :Star:'), ':flex: :star:');
+    expect(chatEmotes.length, greaterThanOrEqualTo(64));
   });
 }
