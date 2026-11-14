@@ -1,7 +1,20 @@
 {
  "quelle": "empiresandpuzzles.com/news",
- "stand": "2026-11-14T06:19Z",
+ "stand": "2026-11-14T13:36Z",
  "artikel": [
+  {
+   "titel": "Scrolls of Aggregation #158",
+   "datum": "2026-11-14",
+   "url": "https://www.empiresandpuzzles.com/news/scrolls-of-aggregation-158",
+   "kurz": "Dear Community: Here's this week's Scrolls of Aggregation — the bite-sized \"stats drop\" series in which we share an interesting data-based tidbit gleaned from the latest goings-on in the game.",
+   "text": "Scrolls of Aggregation #158\nNovember 14, 2026\n\n\n\nDear Community:\nHere's this week's Scrolls of Aggregation —\n\nTop 3 wing heroes on Raid defense teams among the top 1% of players over the past 4 weeks.\n\nThe bite-sized \"stats drop\" series in which we share an interesting data-based tidbit gleaned from the latest goings-on in the game. (If you've missed our previous entries, you can find them all HERE .)\n\nThank you always for your continued interest and support. If you have suggestions or comments regarding the series, please feel free to discuss them HERE on our official Discord server.\nBest of luck in the battles — and if you haven't done so yet, please make sure to collect your free daily gift on your way out!",
+   "arten": [
+    "statistik"
+   ],
+   "titel_de": "Schriftrollen der Aggregation #158",
+   "text_de": "Scrolls of Aggregation #158\n14. November 2026\n\n\n\nLiebe Community:\nHier sind die Scrolls of Aggregation dieser Woche –\n\nDie drei besten Flügelhelden in Raid-Verteidigungsteams unter den besten 1 % der Spieler der letzten 4 Wochen.\n\nDie kleine „Stats Drop“-Serie, in der wir einen interessanten datenbasierten Leckerbissen aus den neuesten Ereignissen im Spiel teilen. (Wenn Sie unsere vorherigen Einträge verpasst haben, finden Sie sie alle HIER.)\n\nVielen Dank für Ihr anhaltendes Interesse und Ihre Unterstützung. Wenn Sie Vorschläge oder Kommentare zur Serie haben, können Sie diese gerne HIER auf unserem offiziellen Discord-Server diskutieren.\nViel Glück bei den Kämpfen – und falls Sie es noch nicht getan haben, holen Sie sich bitte auf dem Weg nach draußen Ihr kostenloses tägliches Geschenk ab!",
+   "kurz_de": "Liebe Community: Hier sind die Scrolls of Aggregation dieser Woche – die mundgerechte „Stats-Drop“-Serie, in der wir einen interessanten datenbasierten Leckerbissen aus den neuesten Ereignissen im Spiel teilen."
+  },
   {
    "titel": "Version 90 Release Notes & Status",
    "datum": "2026-11-09",
@@ -246,7 +259,7 @@
    "arten": [
     "statistik"
    ],
-   "titel_de": ""
+   "titel_de": "Schriftrollen der Aggregation #146"
   },
   {
    "titel": "September 2026 Calendar of Events",
@@ -256,7 +269,7 @@
     "kalender",
     "event"
    ],
-   "titel_de": ""
+   "titel_de": "Veranstaltungskalender September 2026"
   },
   {
    "titel": "Version 88 Release Notes & Status",
@@ -293,7 +306,7 @@
    "arten": [
     "info"
    ],
-   "titel_de": ""
+   "titel_de": "Die Heldenliga kehrt zurück!"
   },
   {
    "titel": "Scrolls of Aggregation #145",
@@ -302,7 +315,7 @@
    "arten": [
     "statistik"
    ],
-   "titel_de": ""
+   "titel_de": "Schriftrollen der Aggregation Nr. 145"
   },
   {
    "titel": "August 2026 Calendar of Events",
@@ -312,7 +325,7 @@
     "kalender",
     "event"
    ],
-   "titel_de": ""
+   "titel_de": "Veranstaltungskalender August 2026"
   },
   {
    "titel": "Scrolls of Aggregation #144",
@@ -321,7 +334,7 @@
    "arten": [
     "statistik"
    ],
-   "titel_de": ""
+   "titel_de": "Schriftrollen der Aggregation #144"
   },
   {
    "titel": "Scrolls of Aggregation #143",
@@ -330,7 +343,7 @@
    "arten": [
     "statistik"
    ],
-   "titel_de": ""
+   "titel_de": "Schriftrollen der Aggregation #143"
   },
   {
    "titel": "Scrolls of Aggregation #142",
@@ -339,7 +352,7 @@
    "arten": [
     "statistik"
    ],
-   "titel_de": ""
+   "titel_de": "Schriftrollen der Aggregation #142"
   },
   {
    "titel": "Scrolls of Aggregation #141",
@@ -348,7 +361,7 @@
    "arten": [
     "statistik"
    ],
-   "titel_de": ""
+   "titel_de": "Schriftrollen der Aggregation Nr. 141"
   },
   {
    "titel": "June 2026 Balance Update II – Details & Release Notes",
@@ -372,7 +385,7 @@
     "kalender",
     "event"
    ],
-   "titel_de": ""
+   "titel_de": "Veranstaltungskalender Juli 2026"
   },
   {
    "titel": "Scrolls of Aggregation #140",
@@ -381,7 +394,7 @@
    "arten": [
     "statistik"
    ],
-   "titel_de": ""
+   "titel_de": "Schriftrollen der Aggregation Nr. 140"
   },
   {
    "titel": "Version 87 Release Notes & Status",
@@ -404,7 +417,7 @@
    "arten": [
     "statistik"
    ],
-   "titel_de": ""
+   "titel_de": "Schriftrollen der Aggregation Nr. 139"
   },
   {
    "titel": "Sunbay Sharks get a boost!",
@@ -413,7 +426,7 @@
    "arten": [
     "info"
    ],
-   "titel_de": ""
+   "titel_de": "Sunbay Sharks bekommen einen Schub!"
   },
   {
    "titel": "June 2026 Balance Update – Details & Release Notes",
@@ -436,7 +449,7 @@
    "arten": [
     "statistik"
    ],
-   "titel_de": ""
+   "titel_de": "Schriftrollen der Aggregation #138"
   },
   {
    "titel": "Scrolls of Aggregation #137",
@@ -445,7 +458,7 @@
    "arten": [
     "statistik"
    ],
-   "titel_de": ""
+   "titel_de": "Schriftrollen der Aggregation Nr. 137"
   },
   {
    "titel": "Scrolls of Aggregation #136",
@@ -454,17 +467,7 @@
    "arten": [
     "statistik"
    ],
-   "titel_de": ""
-  },
-  {
-   "titel": "June 2026 Calendar of Events",
-   "datum": "2026-05-22",
-   "url": "https://www.empiresandpuzzles.com/news/june-2026-calendar-of-events",
-   "arten": [
-    "kalender",
-    "event"
-   ],
-   "titel_de": ""
+   "titel_de": "Schriftrollen der Aggregation Nr. 136"
   }
  ],
  "kalender": [
