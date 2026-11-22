@@ -1,6 +1,6 @@
 {
  "quelle": "empiresandpuzzles.com/news",
- "stand": "2026-11-21T19:14Z",
+ "stand": "2026-11-22T06:43Z",
  "artikel": [
   {
    "titel": "Scrolls of Aggregation #159",
@@ -8,12 +8,12 @@
    "url": "https://www.empiresandpuzzles.com/news/scrolls-of-aggregation-159",
    "kurz": "Dear Community: Here's this week's Scrolls of Aggregation — the bite-sized \"stats drop\" series in which we share an interesting data-based tidbit gleaned from the latest goings-on in the game.",
    "text": "Scrolls of Aggregation #159\nNovember 21, 2026\n\n\n\nDear Community:\nHere's this week's Scrolls of Aggregation —\n\nLegendary Fire Heroes that dealt the most damage on average per battle and were used at least 10,000 times against 15⭐Nature Titans over the 28 day period.\n\nThe bite-sized \"stats drop\" series in which we share an interesting data-based tidbit gleaned from the latest goings-on in the game. (If you've missed our previous entries, you can find them all HERE .)\n\nThank you always for your continued interest and support. If you have suggestions or comments regarding the series, please feel free to discuss them HERE on our official Discord server.\nBest of luck in the battles — and if you haven't done so yet, please make sure to collect your free daily gift on your way out!",
+   "titel_de": "Schriftrollen der Aggregation Nr. 159",
+   "kurz_de": "Liebe Community: Hier sind die Scrolls of Aggregation dieser Woche – die mundgerechte „Stats-Drop“-Serie, in der wir einen interessanten datenbasierten Leckerbissen aus den neuesten Ereignissen im Spiel teilen.",
+   "text_de": "Scrolls of Aggregation #159\n21. November 2026\n\n\n\nLiebe Community:\nHier sind die Scrolls of Aggregation dieser Woche –\n\nLegendäre Feuerhelden, die im Durchschnitt pro Kampf den meisten Schaden verursachten und im Zeitraum von 28 Tagen mindestens 10.000 Mal gegen 15⭐Nature Titans eingesetzt wurden.\n\nDie kleine „Stats Drop“-Serie, in der wir einen interessanten datenbasierten Leckerbissen aus den neuesten Ereignissen im Spiel teilen. (Wenn Sie unsere vorherigen Einträge verpasst haben, finden Sie sie alle HIER.)\n\nVielen Dank für Ihr anhaltendes Interesse und Ihre Unterstützung. Wenn Sie Vorschläge oder Kommentare zur Serie haben, können Sie diese gerne HIER auf unserem offiziellen Discord-Server diskutieren.\nViel Glück bei den Kämpfen – und falls Sie es noch nicht getan haben, holen Sie sich bitte auf dem Weg nach draußen Ihr kostenloses tägliches Geschenk ab!",
    "arten": [
     "statistik"
-   ],
-   "titel_de": "",
-   "text_de": "",
-   "kurz_de": ""
+   ]
   },
   {
    "titel": "Scrolls of Aggregation #158",
@@ -272,7 +272,7 @@
    "arten": [
     "statistik"
    ],
-   "titel_de": ""
+   "titel_de": "Schriftrollen der Aggregation #146"
   },
   {
    "titel": "September 2026 Calendar of Events",
@@ -282,7 +282,7 @@
     "kalender",
     "event"
    ],
-   "titel_de": ""
+   "titel_de": "Veranstaltungskalender September 2026"
   },
   {
    "titel": "Version 88 Release Notes & Status",
@@ -319,7 +319,7 @@
    "arten": [
     "info"
    ],
-   "titel_de": ""
+   "titel_de": "Die Heldenliga kehrt zurück!"
   },
   {
    "titel": "Scrolls of Aggregation #145",
@@ -328,7 +328,7 @@
    "arten": [
     "statistik"
    ],
-   "titel_de": ""
+   "titel_de": "Schriftrollen der Aggregation Nr. 145"
   },
   {
    "titel": "August 2026 Calendar of Events",
@@ -338,7 +338,7 @@
     "kalender",
     "event"
    ],
-   "titel_de": ""
+   "titel_de": "Veranstaltungskalender August 2026"
   },
   {
    "titel": "Scrolls of Aggregation #144",
@@ -347,7 +347,7 @@
    "arten": [
     "statistik"
    ],
-   "titel_de": ""
+   "titel_de": "Schriftrollen der Aggregation #144"
   },
   {
    "titel": "Scrolls of Aggregation #143",
@@ -356,7 +356,7 @@
    "arten": [
     "statistik"
    ],
-   "titel_de": ""
+   "titel_de": "Schriftrollen der Aggregation #143"
   },
   {
    "titel": "Scrolls of Aggregation #142",
@@ -365,7 +365,7 @@
    "arten": [
     "statistik"
    ],
-   "titel_de": ""
+   "titel_de": "Schriftrollen der Aggregation #142"
   },
   {
    "titel": "Scrolls of Aggregation #141",
@@ -374,7 +374,7 @@
    "arten": [
     "statistik"
    ],
-   "titel_de": ""
+   "titel_de": "Schriftrollen der Aggregation Nr. 141"
   },
   {
    "titel": "June 2026 Balance Update II – Details & Release Notes",
@@ -398,7 +398,7 @@
     "kalender",
     "event"
    ],
-   "titel_de": ""
+   "titel_de": "Veranstaltungskalender Juli 2026"
   },
   {
    "titel": "Scrolls of Aggregation #140",
@@ -407,7 +407,7 @@
    "arten": [
     "statistik"
    ],
-   "titel_de": ""
+   "titel_de": "Schriftrollen der Aggregation #140"
   },
   {
    "titel": "Version 87 Release Notes & Status",
@@ -430,7 +430,7 @@
    "arten": [
     "statistik"
    ],
-   "titel_de": ""
+   "titel_de": "Schriftrollen der Aggregation Nr. 139"
   },
   {
    "titel": "Sunbay Sharks get a boost!",
@@ -439,7 +439,7 @@
    "arten": [
     "info"
    ],
-   "titel_de": ""
+   "titel_de": "Sunbay Sharks bekommen einen Schub!"
   },
   {
    "titel": "June 2026 Balance Update – Details & Release Notes",
@@ -462,7 +462,7 @@
    "arten": [
     "statistik"
    ],
-   "titel_de": ""
+   "titel_de": "Schriftrollen der Aggregation #138"
   },
   {
    "titel": "Scrolls of Aggregation #137",
@@ -471,7 +471,7 @@
    "arten": [
     "statistik"
    ],
-   "titel_de": ""
+   "titel_de": "Schriftrollen der Aggregation Nr. 137"
   }
  ],
  "kalender": [
