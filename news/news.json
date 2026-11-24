@@ -1,7 +1,21 @@
 {
  "quelle": "empiresandpuzzles.com/news",
- "stand": "2026-11-23T23:52Z",
+ "stand": "2026-11-24T09:53Z",
  "artikel": [
+  {
+   "titel": "December 2026 Calendar of Events",
+   "datum": "2026-11-23",
+   "url": "https://www.empiresandpuzzles.com/news/december-2026-calendar-of-events",
+   "kurz": "Calendar of Events for December 2026 — full schedule of events for Empires & Puzzles",
+   "text": "December 2026 Calendar of Events\nNovember 23, 2026\n\n\n\nCalendar of Events for December 2026\n\nSchedule\n\n• No vember 29, 7:00 UTC → December 3, 7:00 UTC: Vigilant Vegetables 🫜\n\n• November 30, 7:00 UTC → December 3, 7:00 UTC: Soul Exchange ♻️\n\n• December 1, 7:00 UTC → January 1, 7:00 UTC: Peppermint Parade🎄\n\n• December 3, 7:00 UTC → December 8, 7:00 UTC: Alliance Quest: Clash of Knights 🏰\n\n• December 5, 7:00 UTC → December 9, 7:00 UTC: Astral Plane ✨\n\n• December 8, 7:00 UTC → December 12, 7:00 UTC: Contest of Elements 🌑\n\n• December 11, 7:00 UTC → December 15, 7:00 UTC: Costume Chamber 🗝️\n\n• December 12, 7:00 UTC → December 17, 7:00 UTC: War of the Three Kingdoms ⚔️\n\n• December 15, 7:00 UTC → December 19, 7:00 UTC: Shadows of the Deep 🌫️\n\n• December 17, 7:00 UTC → December 21, 7:00 UTC: Windfall Temple 🛕\n\n• December 21, 7:00 UTC → December 25, 7:00 UTC: Goblin Village 👺\n\n• December 22, 7:00 UTC → December 25, 7:00 UTC: Visiting Outfitter 👗\n\n• December 22, 7:00 UTC → December 26, 7:00 UTC: Tavern of Legends 🌟\n\n• December 25, 7:00 UTC → December 30, 7:00 UTC: Ninja Tower🥷\n\n• December 25, 7:00 UTC → December 28, 7:00 UTC: Dragon Cave 🐲\n\n• December 28, 7:00 UTC → January 1, 7:00 UTC: Charming Costume Chamber 🗝️\n\n• December 30, 7:00 UTC → January 3, 7:00 UTC: Vigilant Vegetables 🫜\n\nSeason II Atlantis Rises, Season III Valhalla Forever, Season IV Tremors of Underwild, Season V Judgment of Dunes, Untold Tales I and Untold Tales II will rotate every 4 days without pause.\nAncient Underroot will have a 4 day event starting every Tuesday.\n\nDemon Raiders will have a 3 day event starting every other Saturday.\n\nDisclaimer\nAs always, the above schedule is accurate at the time of publication, but may be affected by future updates and/or unforeseen live service issues. We will of course update this post if any changes are made.",
+   "arten": [
+    "kalender",
+    "event"
+   ],
+   "titel_de": "",
+   "text_de": "",
+   "kurz_de": ""
+  },
   {
    "titel": "Scrolls of Aggregation #159",
    "datum": "2026-11-21",
@@ -463,15 +477,6 @@
     "statistik"
    ],
    "titel_de": ""
-  },
-  {
-   "titel": "Scrolls of Aggregation #137",
-   "datum": "2026-05-30",
-   "url": "https://www.empiresandpuzzles.com/news/scrolls-of-aggregation-137",
-   "arten": [
-    "statistik"
-   ],
-   "titel_de": ""
   }
  ],
  "kalender": [
@@ -816,20 +821,138 @@
    "symbol": "♻️",
    "start": "2026-11-30T07:00Z",
    "ende": "2026-12-03T07:00Z",
-   "artikel": "https://www.empiresandpuzzles.com/news/november-2026-calendar-of-events",
+   "artikel": "https://www.empiresandpuzzles.com/news/december-2026-calendar-of-events",
    "name_de": "Seelentausch"
+  },
+  {
+   "name": "Peppermint Parade",
+   "symbol": "🎄",
+   "start": "2026-12-01T07:00Z",
+   "ende": "2027-01-01T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/december-2026-calendar-of-events",
+   "name_de": "Peppermint Parade"
+  },
+  {
+   "name": "Alliance Quest: Clash of Knights",
+   "symbol": "🏰",
+   "start": "2026-12-03T07:00Z",
+   "ende": "2026-12-08T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/december-2026-calendar-of-events",
+   "name_de": "Allianz-Quest: Clash of Knights"
+  },
+  {
+   "name": "Astral Plane",
+   "symbol": "✨",
+   "start": "2026-12-05T07:00Z",
+   "ende": "2026-12-09T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/december-2026-calendar-of-events",
+   "name_de": "Astralebene"
+  },
+  {
+   "name": "Contest of Elements",
+   "symbol": "🌑",
+   "start": "2026-12-08T07:00Z",
+   "ende": "2026-12-12T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/december-2026-calendar-of-events",
+   "name_de": "Wettstreit der Elemente"
+  },
+  {
+   "name": "Costume Chamber",
+   "symbol": "🗝️",
+   "start": "2026-12-11T07:00Z",
+   "ende": "2026-12-15T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/december-2026-calendar-of-events",
+   "name_de": "Kostümkammer"
+  },
+  {
+   "name": "War of the Three Kingdoms",
+   "symbol": "⚔️",
+   "start": "2026-12-12T07:00Z",
+   "ende": "2026-12-17T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/december-2026-calendar-of-events",
+   "name_de": "Krieg der drei Königreiche"
+  },
+  {
+   "name": "Shadows of the Deep",
+   "symbol": "🌫️",
+   "start": "2026-12-15T07:00Z",
+   "ende": "2026-12-19T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/december-2026-calendar-of-events",
+   "name_de": "Schatten der Tiefe"
+  },
+  {
+   "name": "Windfall Temple",
+   "symbol": "🛕",
+   "start": "2026-12-17T07:00Z",
+   "ende": "2026-12-21T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/december-2026-calendar-of-events",
+   "name_de": "Tempel des Glücks"
+  },
+  {
+   "name": "Goblin Village",
+   "symbol": "👺",
+   "start": "2026-12-21T07:00Z",
+   "ende": "2026-12-25T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/december-2026-calendar-of-events",
+   "name_de": "Goblin-Dorf"
+  },
+  {
+   "name": "Tavern of Legends",
+   "symbol": "🌟",
+   "start": "2026-12-22T07:00Z",
+   "ende": "2026-12-26T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/december-2026-calendar-of-events",
+   "name_de": "Taverne der Legenden"
+  },
+  {
+   "name": "Visiting Outfitter",
+   "symbol": "👗",
+   "start": "2026-12-22T07:00Z",
+   "ende": "2026-12-25T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/december-2026-calendar-of-events",
+   "name_de": "Zu Besuch beim Ausstatter"
+  },
+  {
+   "name": "Dragon Cave",
+   "symbol": "🐲",
+   "start": "2026-12-25T07:00Z",
+   "ende": "2026-12-28T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/december-2026-calendar-of-events",
+   "name_de": "Drachenhöhle"
+  },
+  {
+   "name": "Ninja Tower",
+   "symbol": "🥷",
+   "start": "2026-12-25T07:00Z",
+   "ende": "2026-12-30T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/december-2026-calendar-of-events",
+   "name_de": "Ninja-Turm"
+  },
+  {
+   "name": "Charming Costume Chamber",
+   "symbol": "🗝️",
+   "start": "2026-12-28T07:00Z",
+   "ende": "2027-01-01T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/december-2026-calendar-of-events",
+   "name_de": "Charmante Kostümkammer"
+  },
+  {
+   "name": "Vigilant Vegetables",
+   "symbol": "🫜",
+   "start": "2026-12-30T07:00Z",
+   "ende": "2027-01-03T07:00Z",
+   "artikel": "https://www.empiresandpuzzles.com/news/december-2026-calendar-of-events",
+   "name_de": "Wachsames Gemüse"
   }
  ],
  "regeln": [
   "Season II Atlantis Rises, Season III Valhalla Forever, Season IV Tremors of Underwild, Season V Judgment of Dunes, Untold Tales I and Untold Tales II will rotate every 4 days without pause.",
   "Ancient Underroot will have a 4 day event starting every Tuesday.",
-  "Legendary Troop Quest will have a 4 day event starting every other Thursday.",
   "Demon Raiders will have a 3 day event starting every other Saturday."
  ],
  "regeln_de": [
   "Staffel II Atlantis Rises, Staffel III Valhalla Forever, Staffel IV Tremors of Underwild, Staffel V Judgement of Dunes, Untold Tales I und Untold Tales II wechseln alle 4 Tage ohne Pause.",
   "Ancient Underroot wird jeden Dienstag eine viertägige Veranstaltung veranstalten.",
-  "„Legendary Troop Quest“ wird ein viertägiges Event haben, das jeden zweiten Donnerstag beginnt.",
   "Demon Raiders wird jeden zweiten Samstag ein dreitägiges Event veranstalten."
  ]
 }
